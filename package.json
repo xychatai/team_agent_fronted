@@ -1,0 +1,94 @@
+{
+  "name": "team-invite-frontend",
+  "version": "1.0.0",
+  "description": "团队邀请系统独立前端",
+  "main": "index.html",
+  "scripts": {
+    "dev": "live-server --host=0.0.0.0 --port=8080 --open=/index.html",
+    "build": "echo 'Static frontend, no build required'",
+    "serve": "python -m http.server 8080",
+    "serve-php": "php -S localhost:8080",
+    "preview": "live-server --host=0.0.0.0 --port=8080 --no-browser",
+    "deploy": "echo 'Copy all files to your web server'",
+    "lint": "echo 'No linting configured for static files'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "team-invite",
+    "chatgpt",
+    "frontend",
+    "vue3",
+    "element-plus",
+    "static"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "vue": "^3.3.4",
+    "element-plus": "^2.3.7"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/team-invite-frontend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/team-invite-frontend/issues"
+  },
+  "homepage": "https://github.com/your-username/team-invite-frontend#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
+  "config": {
+    "backend_url": "https://team.xychatai.com",
+    "default_port": "8080"
+  },
+  "deployment": {
+    "static": {
+      "description": "Copy all files to any static web server",
+      "requirements": [
+        "Web server supporting static files",
+        "HTTPS recommended for production"
+      ]
+    },
+    "cdn": {
+      "description": "Upload to CDN for global distribution",
+      "files": [
+        "index.html",
+        "config/",
+        "assets/"
+      ]
+    },
+    "docker": {
+      "description": "Use nginx or apache docker container",
+      "example": "docker run -d -p 8080:80 -v $(pwd):/usr/share/nginx/html nginx"
+    }
+  },
+  "features": {
+    "responsive": true,
+    "mobile_friendly": true,
+    "cross_origin": true,
+    "configurable_backend": true,
+    "payment_ready": true
+  },
+  "api_endpoints": {
+    "base_url": "configurable via config/api-config.js",
+    "user": {
+      "redeem": "/api/user/redeem",
+      "status": "/api/user/status",
+      "unbind": "/api/user/unbind"
+    },
+    "warranty": {
+      "check": "/api/user/warranty/check",
+      "replace": "/api/user/warranty/replace"
+    }
+  }
+}

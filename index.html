@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>团队邀请系统 - 用户端</title>
+    <link href="https://cdn.jsdelivr.net/npm/element-plus@2.3.7/dist/index.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>团队邀请系统</h1>
+            <p>使用兑换码快速加入ChatGPT团队</p>
+        </div>
+        
+        <div class="container">
+            <el-tabs v-model="activeTab" class="tabs-container">
+                <!-- 兑换码兑换 -->
+                <el-tab-pane label="兑换码兑换" name="redeem">
+                    <div class="card">
+                        <div class="card-title">使用兑换码</div>
+                        <div class="form-section">
+                            <el-form :model="redeemForm" :rules="redeemRules" ref="redeemFormRef">
+                                <el-form-item label="兑换码" prop="code">
+                                    <el-input 
+                                        v-model="redeemForm.code" 
+                                        placeholder="请输入兑换码"
+                                        clearable>
+                                    </el-input>
+                                </el-form-item>
+                                <el-form-item label="邮箱地址" prop="email">
+                                    <el-input 
+                                        v-model="redeemForm.email" 
+                                        placeholder="请输入您的邮箱地址"
+                                        clearable>
+                                    </el-input>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button 
+                                        type="primary" 
+                                        @click="handleRedeem"
+                                        :loading="loading.redeem">
+                                        立即兑换
+                                    </el-button>
+                                </el-form-item>
+                            </el-form>
+                            
+                            <div v-if="redeemResult" :class="['result-box', redeemResult.success ? 'success-box' : 'error-box']">
+                                <div v-if="redeemResult.success">
+                                    <el-alert type="success" :closable="false">
+                                        <div>兑换成功！</div>
+                                        <div v-text="redeemResult.message"></div>
+                                        <div v-if="redeemResult.bind_type === 'warranty'">
+                                            质保期：<span v-text="redeemResult.warranty_days"></span>天
+                                        </div>
+                                        <div style="margin-top: 10px;">
+                                            <strong>请检查您的邮箱并接受团队邀请</strong>
+                                        </div>
+                                    </el-alert>
+                                </div>
+                                <div v-else>
+                                    <el-alert type="error" :closable="false">
+                                        <span v-text="redeemResult.error"></span>
+                                    </el-alert>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </el-tab-pane>
+                
+                <!-- 查询状态 -->
+                <el-tab-pane label="查询状态" name="status">
+                    <div class="card">
+                        <div class="card-title">查询邀请状态</div>
+                        <div class="form-section">
+                            <el-form :model="statusForm" :rules="statusRules" ref="statusFormRef">
+                                <el-form-item label="邮箱地址" prop="email">
+                                    <el-input 
+                                        v-model="statusForm.email" 
+                                        placeholder="请输入您的邮箱地址"
+                                        clearable>
+                                    </el-input>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button 
+                                        type="primary" 
+                                        @click="handleCheckStatus"
+                                        :loading="loading.status">
+                                        查询状态
+                                    </el-button>
+                                </el-form-item>
+                            </el-form>
+                            
+                            <div v-if="statusResult" class="result-box">
+                                <el-descriptions :column="1" border>
+                                    <el-descriptions-item label="绑定状态">
+                                        <el-tag :type="statusResult.has_binding ? 'success' : 'info'">
+                                            <span v-text="statusResult.has_binding ? '已绑定' : '未绑定'"></span>
+                                        </el-tag>
+                                    </el-descriptions-item>
+                                    <el-descriptions-item v-if="statusResult.binding" label="兑换码">
+                                        <span v-text="statusResult.binding.redemption_code"></span>
+                                    </el-descriptions-item>
+                                    <el-descriptions-item v-if="statusResult.binding" label="母号邮箱">
+                                        <span v-text="statusResult.binding.mother_email"></span>
+                                    </el-descriptions-item>
+                                    <el-descriptions-item v-if="statusResult.binding" label="绑定类型">
+                                        <el-tag :type="statusResult.binding.type === 'warranty' ? 'warning' : 'info'">
+                                            <span v-text="statusResult.binding.type === 'warranty' ? '质保型' : '一次性'"></span>
+                                        </el-tag>
+                                    </el-descriptions-item>
+                                    <el-descriptions-item v-if="statusResult.binding && statusResult.binding.status" label="绑定状态">
+                                        <el-tag :type="statusResult.binding.status === 'active' ? 'success' : 'info'">
+                                            <span v-text="statusResult.binding.status"></span>
+                                        </el-tag>
+                                    </el-descriptions-item>
+                                    <el-descriptions-item v-if="statusResult.binding && statusResult.binding.remaining_days !== undefined" label="剩余质保天数">
+                                        <span v-text="statusResult.binding.remaining_days"></span>天
+                                    </el-descriptions-item>
+                                    <el-descriptions-item label="邀请统计">
+                                        总计：<span v-text="statusResult.invite_stats?.total || 0"></span>次，
+                                        成功：<span v-text="statusResult.invite_stats?.success || 0"></span>次
+                                    </el-descriptions-item>
+                                </el-descriptions>
+                                
+                                <!-- 解绑按钮 -->
+                                <div v-if="statusResult.binding && statusResult.binding.status === 'active'" style="margin-top: 20px; text-align: center;">
+                                    <el-button 
+                                        type="danger" 
+                                        @click="handleUnbind"
+                                        :loading="loading.unbind">
+                                        解绑卡密
+                                    </el-button>
+                                    <div style="margin-top: 10px; color: #909399; font-size: 13px;">
+                                        <span v-if="statusResult.binding.type === 'warranty'">
+                                            提示：质保型卡密解绑后可以重新使用
+                                        </span>
+                                        <span v-else>
+                                            提示：一次性卡密在母号活跃时可解绑并重新使用，母号封禁时无法解绑
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </el-tab-pane>
+                
+                <!-- 质保服务 -->
+                <el-tab-pane label="质保服务" name="warranty">
+                    <div class="card">
+                        <div class="card-title">质保服务</div>
+                        <div class="form-section">
+                            <el-form :model="warrantyForm" :rules="warrantyRules" ref="warrantyFormRef">
+                                <el-form-item label="邮箱地址" prop="email">
+                                    <el-input 
+                                        v-model="warrantyForm.email" 
+                                        placeholder="请输入您的邮箱地址"
+                                        clearable>
+                                    </el-input>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button 
+                                        type="primary" 
+                                        @click="handleCheckWarranty"
+                                        :loading="loading.warranty">
+                                        检查质保状态
+                                    </el-button>
+                                    <el-button 
+                                        v-if="warrantyStatus && warrantyStatus.needs_replacement"
+                                        type="warning" 
+                                        @click="handleRequestReplacement"
+                                        :loading="loading.replace">
+                                        申请替换
+                                    </el-button>
+                                </el-form-item>
+                            </el-form>
+                            
+                            <div v-if="warrantyStatus" class="result-box">
+                                <el-alert 
+                                    :type="warrantyStatus.has_warranty ? (warrantyStatus.needs_replacement ? 'warning' : 'success') : 'info'"
+                                    :closable="false">
+                                    <div v-if="warrantyStatus.has_warranty">
+                                        <div>质保状态：有效</div>
+                                        <div>剩余天数：<span v-text="warrantyStatus.remaining_days"></span>天</div>
+                                        <div>当前母号：<span v-text="warrantyStatus.current_mother"></span></div>
+                                        <div>母号状态：<span v-text="warrantyStatus.mother_alive ? '正常' : '失效'"></span></div>
+                                        <div v-if="warrantyStatus.needs_replacement">
+                                            <strong>母号已失效，可申请质保替换</strong>
+                                        </div>
+                                    </div>
+                                    <div v-else>
+                                        <span v-text="warrantyStatus.message || '无质保服务'"></span>
+                                    </div>
+                                </el-alert>
+                            </div>
+                            
+                            <div v-if="replaceResult" :class="['result-box', replaceResult.success ? 'success-box' : 'error-box']">
+                                <el-alert :type="replaceResult.success ? 'success' : 'error'" :closable="false">
+                                    <div v-if="replaceResult.success">
+                                        <div>替换成功！</div>
+                                        <div>新母号：<span v-text="replaceResult.new_mother"></span></div>
+                                        <div>剩余替换次数：<span v-text="replaceResult.remaining_replacements"></span>次</div>
+                                        <div><strong v-text="replaceResult.note"></strong></div>
+                                    </div>
+                                    <div v-else>
+                                        <span v-text="replaceResult.error"></span>
+                                    </div>
+                                </el-alert>
+                            </div>
+                        </div>
+                    </div>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
+    </div>
+
+    <!-- 依赖脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.3.7/dist/index.full.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.3.7/dist/locale/zh-cn.js"></script>
+    
+    <!-- 配置文件 -->
+    <script src="config/api-config.js"></script>
+    
+    <!-- 应用脚本 -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/main.js"></script>
+    
+</body>
+</html>

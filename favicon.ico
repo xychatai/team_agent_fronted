@@ -1,0 +1,5 @@
+<!-- 这是一个简单的SVG图标，浏览器会将其作为favicon -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#667eea"/>
+  <text x="16" y="22" font-family="Arial" font-size="18" fill="white" text-anchor="middle">T</text>
+</svg>
