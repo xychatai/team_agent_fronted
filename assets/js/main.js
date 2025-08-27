@@ -16,7 +16,8 @@ const app = createApp({
             status: false,
             warranty: false,
             replace: false,
-            unbind: false
+            unbind: false,
+            help: false
         });
         
         // 兑换表单相关
@@ -36,12 +37,12 @@ const app = createApp({
         };
         const redeemResult = ref(null);
         
-        // 状态查询表单相关
-        const statusFormRef = ref(null);
-        const statusForm = reactive({
+        // 解绑表单相关（独立页面）
+        const unbindFormRef = ref(null);
+        const unbindForm = reactive({
             email: ''
         });
-        const statusRules = {
+        const unbindRules = {
             email: [
                 { required: true, message: '请输入邮箱', trigger: 'blur' },
                 { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
@@ -49,19 +50,55 @@ const app = createApp({
         };
         const statusResult = ref(null);
         
-        // 质保表单相关
-        const warrantyFormRef = ref(null);
-        const warrantyForm = reactive({
-            email: ''
-        });
-        const warrantyRules = {
-            email: [
-                { required: true, message: '请输入邮箱', trigger: 'blur' },
-                { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
-            ]
+        // 帮助内容相关
+        const helpContent = ref(null);
+        
+        // 监听标签页切换
+        const handleTabChange = (tabName) => {
+            if (tabName === 'help' && helpContent.value === null) {
+                loadHelpContent();
+            }
         };
-        const warrantyStatus = ref(null);
-        const replaceResult = ref(null);
+        
+        // 加载帮助内容
+        const loadHelpContent = async () => {
+            loading.help = true;
+            try {
+                const data = await window.helpApi.getContent();
+                if (data.success && data.content) {
+                    helpContent.value = data.content;
+                } else {
+                    // API存在但没有内容，显示提示
+                    helpContent.value = '';
+                }
+            } catch (error) {
+                console.warn('获取帮助内容失败，使用默认内容:', error);
+                // 设置为空字符串，这样会显示默认内容
+                helpContent.value = '';
+            } finally {
+                loading.help = false;
+            }
+        };
+        
+        // 页面加载时尝试获取帮助内容
+        const initializeHelp = async () => {
+            try {
+                const data = await window.helpApi.getContent();
+                if (data.success && data.content) {
+                    helpContent.value = data.content;
+                } else {
+                    helpContent.value = '';
+                }
+            } catch (error) {
+                console.warn('初始化帮助内容失败:', error);
+                helpContent.value = '';
+            }
+        };
+        
+        // 页面加载完成后初始化帮助内容
+        Vue.nextTick(() => {
+            initializeHelp();
+        });
         
         // 兑换码兑换处理
         const handleRedeem = () => {
@@ -90,15 +127,15 @@ const app = createApp({
             });
         };
         
-        // 状态查询处理
+        // 状态查询处理（用于解绑页面）
         const handleCheckStatus = () => {
-            statusFormRef.value.validate(async (valid) => {
+            unbindFormRef.value.validate(async (valid) => {
                 if (valid) {
                     loading.status = true;
                     statusResult.value = null;
                     
                     try {
-                        const data = await window.userApi.getStatus(statusForm.email);
+                        const data = await window.userApi.getStatus(unbindForm.email);
                         
                         if (data.success) {
                             statusResult.value = data;
@@ -115,56 +152,6 @@ const app = createApp({
             });
         };
         
-        // 质保状态检查处理
-        const handleCheckWarranty = () => {
-            warrantyFormRef.value.validate(async (valid) => {
-                if (valid) {
-                    loading.warranty = true;
-                    warrantyStatus.value = null;
-                    replaceResult.value = null;
-                    
-                    try {
-                        const data = await window.warrantyApi.checkStatus(warrantyForm.email);
-                        
-                        if (data.success) {
-                            warrantyStatus.value = data;
-                        } else {
-                            ElMessage.error(data.error || '查询失败');
-                        }
-                    } catch (error) {
-                        console.error('质保状态查询请求失败:', error);
-                        ElMessage.error(error.error || '请求失败，请重试');
-                    } finally {
-                        loading.warranty = false;
-                    }
-                }
-            });
-        };
-        
-        // 质保替换申请处理
-        const handleRequestReplacement = async () => {
-            loading.replace = true;
-            replaceResult.value = null;
-            
-            try {
-                const data = await window.warrantyApi.requestReplacement(warrantyForm.email, '母号失效');
-                replaceResult.value = data;
-                
-                if (data.success) {
-                    ElMessage.success('替换成功！请检查邮箱');
-                    // 重新检查质保状态
-                    handleCheckWarranty();
-                } else {
-                    ElMessage.error(data.error || '替换失败');
-                }
-            } catch (error) {
-                console.error('质保替换请求失败:', error);
-                replaceResult.value = error;
-                ElMessage.error(error.error || '请求失败，请重试');
-            } finally {
-                loading.replace = false;
-            }
-        };
         
         // 解绑处理
         const handleUnbind = async () => {
@@ -192,7 +179,7 @@ const app = createApp({
                 
                 loading.unbind = true;
                 
-                const data = await window.userApi.unbind(statusForm.email, binding.redemption_code);
+                const data = await window.userApi.unbind(unbindForm.email, binding.redemption_code);
                 
                 if (data.success) {
                     // 根据类型显示不同的成功消息
@@ -286,6 +273,7 @@ const app = createApp({
         return {
             activeTab,
             loading,
+            handleTabChange,
             
             // 兑换相关
             redeemForm,
@@ -294,22 +282,17 @@ const app = createApp({
             redeemResult,
             handleRedeem,
             
-            // 状态查询相关
-            statusForm,
-            statusFormRef,
-            statusRules,
+            // 解绑相关
+            unbindForm,
+            unbindFormRef,
+            unbindRules,
             statusResult,
             handleCheckStatus,
             handleUnbind,
             
-            // 质保相关
-            warrantyForm,
-            warrantyFormRef,
-            warrantyRules,
-            warrantyStatus,
-            replaceResult,
-            handleCheckWarranty,
-            handleRequestReplacement
+            // 帮助相关
+            helpContent,
+            loadHelpContent
         };
     }
 });

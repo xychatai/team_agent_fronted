@@ -15,7 +15,8 @@ const DEFAULT_CONFIG = {
             redeem: '/backend_api/user/redeem',
             status: '/backend_api/user/status', 
             confirm: '/backend_api/user/confirm',
-            unbind: '/backend_api/user/unbind'
+            unbind: '/backend_api/user/unbind',
+            help: '/backend_api/user/help'
         },
         // 质保相关接口
         warranty: {

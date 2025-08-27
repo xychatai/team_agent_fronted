@@ -11,31 +11,51 @@
 body {
     margin: 0;
     padding: 0;
-    background: #f5f7fa;
+    background: linear-gradient(135deg, #f5f7fa 0%, #f0f4f8 100%);
     font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
     line-height: 1.6;
+    min-height: 100vh;
 }
 
 /* 头部样式 */
 .header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 20px 0;
+    padding: 24px 0;
     text-align: center;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     position: relative;
+    overflow: hidden;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 .header h1 {
     margin: 0 0 8px 0;
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 600;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .header p {
-    margin: 0 0 10px 0;
-    font-size: 16px;
+    margin: 0;
+    font-size: 15px;
     opacity: 0.9;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .config-info {
@@ -53,8 +73,8 @@ body {
 
 /* 主容器 */
 .container {
-    max-width: 1200px;
-    margin: 30px auto;
+    max-width: 900px;
+    margin: 20px auto;
     padding: 0 20px;
 }
 
@@ -85,37 +105,382 @@ body {
 
 /* 标签页容器 */
 .tabs-container {
-    min-height: 400px;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.04);
 }
 
-/* 表单区域 */
-.form-section {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-/* 结果展示框 */
-.result-box {
-    margin-top: 20px;
-    padding: 16px;
-    border-radius: 8px;
-    border-left: 4px solid #409eff;
-    background: #f0f9ff;
+/* 标签页标签样式 */
+.tab-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
     transition: all 0.3s ease;
 }
 
-.result-box.error-box {
-    background: #fef0f0;
-    border-left-color: #f56c6c;
+.tab-label .el-icon {
+    font-size: 16px;
+    transition: transform 0.3s ease;
 }
 
-.result-box.success-box {
-    background: #f0f9ff;
-    border-left-color: #67c23a;
+.el-tabs__item:hover .tab-label .el-icon {
+    transform: scale(1.1);
+}
+
+/* 标签页内容区域 */
+.tab-content {
+    padding: 24px;
+    min-height: 400px;
+}
+
+/* 功能卡片 */
+.feature-card {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    border-color: rgba(102, 126, 234, 0.2);
+}
+
+/* 卡片头部 */
+.card-header {
+    padding: 24px 24px 16px 24px;
+    text-align: center;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+
+.card-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px auto;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.redeem-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+.unbind-icon {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(240, 147, 251, 0.3);
+}
+
+.help-icon {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(79, 172, 254, 0.3);
+}
+
+.feature-card:hover .card-icon {
+    transform: scale(1.05);
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 6px;
+}
+
+.card-desc {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+/* 卡片主体 */
+.card-body {
+    padding: 24px;
+}
+
+/* 输入框样式 */
+.input-field {
+    margin-bottom: 16px;
+}
+
+.input-field .el-input__wrapper {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fafbfc;
+    transition: all 0.3s ease;
+    padding: 12px 16px;
+    height: 48px;
+}
+
+.input-field .el-input__wrapper:hover {
+    background: white;
+    border-color: #d1d5db;
+}
+
+.input-field .el-input__wrapper.is-focus {
+    background: white;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.input-field .el-input__inner {
+    font-size: 15px;
+    color: #1f2937;
+    font-weight: 400;
+}
+
+/* 按钮样式 */
+.action-button {
+    width: 100%;
+    height: 48px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    border: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.action-button:active {
+    transform: translateY(0);
+}
+
+.unbind-button {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    box-shadow: 0 2px 8px rgba(240, 147, 251, 0.3);
+}
+
+.unbind-button:hover {
+    box-shadow: 0 4px 16px rgba(240, 147, 251, 0.4);
+}
+
+/* 结果面板样式 */
+.result-panel {
+    margin-top: 32px;
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(10px);
+}
+
+.success-panel {
+    background: linear-gradient(145deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 2px solid rgba(34, 197, 94, 0.2);
+    box-shadow: 0 8px 32px rgba(34, 197, 94, 0.1);
+}
+
+.error-panel {
+    background: linear-gradient(145deg, #fef2f2 0%, #fecaca 100%);
+    border: 2px solid rgba(239, 68, 68, 0.2);
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.1);
+}
+
+.result-icon {
+    margin-bottom: 16px;
+    animation: bounceIn 0.6s ease;
+}
+
+.result-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 12px;
+}
+
+.result-message {
+    font-size: 16px;
+    color: #4b5563;
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.warranty-info {
+    margin: 16px 0;
+}
+
+.next-step {
+    padding: 16px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 12px;
+    font-size: 16px;
+    color: #1f2937;
+}
+
+/* 状态面板 */
+.status-panel {
+    margin-top: 32px;
+}
+
+.binding-info .el-descriptions {
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.code-display {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.unbind-actions {
+    margin-top: 24px;
+    text-align: center;
+}
+
+.unbind-tips {
+    margin-top: 16px;
+}
+
+/* 帮助内容样式 */
+.help-content {
+    text-align: left;
+    line-height: 1.8;
+    font-size: 16px;
+    color: #374151;
+}
+
+.help-content h1, .help-content h2, .help-content h3 {
+    color: #1f2937;
+    margin-top: 24px;
+    margin-bottom: 12px;
+}
+
+.help-content img {
+    max-width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    margin: 16px 0;
+}
+
+.default-help {
+    text-align: left;
+}
+
+.help-section {
+    margin-bottom: 28px;
+    padding: 24px;
+    background: rgba(248, 250, 252, 0.6);
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.help-section:hover {
+    background: rgba(248, 250, 252, 0.8);
+    transform: translateX(4px);
+}
+
+.help-section h3 {
+    color: #1f2937;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    margin-top: 0;
+}
+
+.help-section p, .help-section ol {
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 8px;
+}
+
+.help-section ol {
+    padding-left: 20px;
+}
+
+.help-section li {
+    margin-bottom: 8px;
+}
+
+.loading-help {
+    padding: 32px;
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 页面加载动画 */
+.feature-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.feature-card:nth-child(1) { animation-delay: 0.1s; }
+.feature-card:nth-child(2) { animation-delay: 0.2s; }
+.feature-card:nth-child(3) { animation-delay: 0.3s; }
+
+.tab-label {
+    animation: slideIn 0.3s ease-out;
 }
 
 /* Element Plus 组件样式覆盖 */
@@ -124,34 +489,79 @@ body {
     color: #606266;
 }
 
+/* 标签页增强样式 */
+.el-tabs__header {
+    margin: 0;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafbfc;
+}
+
+.el-tabs__nav-wrap {
+    padding: 0 20px;
+}
+
+.el-tabs__item {
+    padding: 16px 20px !important;
+    font-weight: 500;
+    color: #6b7280;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.el-tabs__item:hover {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.04);
+}
+
+.el-tabs__item.is-active {
+    color: #667eea;
+    background: white;
+    border-bottom-color: #667eea;
+    font-weight: 600;
+}
+
+.el-tabs__active-bar {
+    display: none;
+}
+
+/* Element Plus组件重写 */
 .el-button {
     border-radius: 8px;
     font-weight: 500;
     transition: all 0.3s ease;
 }
 
-.el-button--primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.el-tag {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.el-alert {
+    border-radius: 8px;
     border: none;
 }
 
-.el-button--primary:hover {
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.el-input__wrapper {
+.el-descriptions {
     border-radius: 8px;
-    transition: all 0.3s ease;
 }
 
-.el-input__wrapper:hover {
-    box-shadow: 0 0 0 1px #c0c4cc inset;
+.el-descriptions__body {
+    background: white;
 }
 
-.el-input__wrapper.is-focus {
-    box-shadow: 0 0 0 1px #409eff inset;
+.el-descriptions__table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* 滚动条美化 */
+.el-tabs__content {
+    overflow: auto;
+}
+
+/* 骨架屏样式 */
+.el-skeleton__item {
+    border-radius: 6px;
 }
 
 .el-tabs__header {
@@ -174,57 +584,67 @@ body {
 /* 响应式设计 */
 @media (max-width: 768px) {
     .container {
-        margin: 20px auto;
-        padding: 0 15px;
+        margin: 16px auto;
+        padding: 0 16px;
     }
     
     .header {
-        padding: 15px 0;
+        padding: 20px 0;
     }
     
     .header h1 {
-        font-size: 24px;
+        font-size: 22px;
     }
     
     .header p {
         font-size: 14px;
     }
     
-    .card {
-        padding: 16px;
-        margin-bottom: 15px;
+    .tabs-container {
+        border-radius: 12px;
+    }
+    
+    .tab-content {
+        padding: 20px 16px;
+    }
+    
+    .card-header {
+        padding: 20px 20px 16px 20px;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .card-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
     }
     
     .card-title {
         font-size: 18px;
-        margin-bottom: 15px;
+        margin-bottom: 4px;
     }
     
-    .form-section {
-        max-width: 100%;
+    .card-desc {
+        font-size: 13px;
     }
     
-    .tabs-container {
-        min-height: 300px;
+    .input-field .el-input__wrapper {
+        padding: 10px 14px;
+        height: 44px;
     }
     
-    .el-tabs__content {
-        padding: 15px;
-    }
-    
-    .config-info {
-        margin-top: 8px;
-    }
-    
-    .config-info small {
-        font-size: 11px;
-        padding: 3px 6px;
+    .action-button {
+        height: 44px;
+        font-size: 14px;
     }
 }
 
 @media (max-width: 480px) {
     .container {
-        padding: 0 10px;
+        padding: 0 12px;
     }
     
     .header h1 {
@@ -235,17 +655,34 @@ body {
         font-size: 13px;
     }
     
-    .card {
-        padding: 12px;
+    .tab-content {
+        padding: 16px 12px;
+    }
+    
+    .card-header {
+        padding: 16px 16px 12px 16px;
+    }
+    
+    .card-body {
+        padding: 16px;
+    }
+    
+    .card-icon {
+        width: 44px;
+        height: 44px;
     }
     
     .card-title {
         font-size: 16px;
     }
     
-    .result-box {
-        padding: 12px;
-        margin-top: 15px;
+    .card-desc {
+        font-size: 12px;
+    }
+    
+    .result-panel {
+        padding: 20px;
+        margin-top: 20px;
     }
 }
 

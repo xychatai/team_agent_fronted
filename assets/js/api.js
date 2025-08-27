@@ -231,16 +231,42 @@ class WarrantyApi {
     }
 }
 
+// 帮助API类
+class HelpApi {
+    constructor() {
+        this.client = new ApiClient();
+    }
+
+    /**
+     * 获取帮助内容
+     * @returns {Promise} 帮助内容
+     */
+    async getContent() {
+        try {
+            return await this.client.get('user.help');
+        } catch (error) {
+            // 如果API不存在或失败，返回默认结果
+            console.warn('帮助API暂不可用:', error);
+            return {
+                success: false,
+                content: null
+            };
+        }
+    }
+}
+
 // 创建全局API实例
 window.userApi = new UserApi();
 window.warrantyApi = new WarrantyApi();
+window.helpApi = new HelpApi();
 
 // 导出API类（如果使用模块系统）
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         ApiClient,
         UserApi,
-        WarrantyApi
+        WarrantyApi,
+        HelpApi
     };
 }
 

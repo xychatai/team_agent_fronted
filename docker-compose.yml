@@ -1,0 +1,69 @@
+# =====================================================
+# 团队邀请系统前端用户界面 Docker Compose 配置
+# 独立前端部署，通过代理连接到外部后端服务
+# =====================================================
+
+version: '3.8'
+
+services:
+  # 前端用户界面服务
+  frontend-user:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: team_invite_frontend_user
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+    environment:
+      # 后端API服务器配置（外部服务地址）
+      BACKEND_URL: ${BACKEND_URL:-http://192.168.3.98:5125}
+      
+      # 前端服务器配置
+      FRONTEND_HOST: ${FRONTEND_HOST:-0.0.0.0}
+      FRONTEND_PORT: ${FRONTEND_PORT:-8080}
+      
+      # Flask配置
+      FLASK_DEBUG: ${FLASK_DEBUG:-false}
+      SECRET_KEY: ${SECRET_KEY:-frontend-secret-key-change-in-production}
+      
+      # 时区配置
+      TZ: ${TZ:-Asia/Shanghai}
+      
+      # 日志配置
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      
+      # 代理配置
+      PROXY_TIMEOUT: ${PROXY_TIMEOUT:-30}
+      PROXY_MAX_RETRIES: ${PROXY_MAX_RETRIES:-3}
+      
+      # 安全配置
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      MAX_CONTENT_LENGTH: ${MAX_CONTENT_LENGTH:-16777216}
+    volumes:
+      # 日志目录
+      - ./logs:/app/logs:Z
+      # 配置文件（可选，用于动态更新API配置）
+      - ./config:/app/config:Z
+    networks:
+      - frontend_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-user.rule=Host(`frontend.local`)"
+      - "traefik.http.routers.frontend-user.entrypoints=web"
+      - "traefik.http.services.frontend-user.loadbalancer.server.port=8080"
+
+networks:
+  frontend_network:
+    driver: bridge
+    name: team_invite_frontend_network
+
+volumes:
+  frontend_logs:
+    driver: local

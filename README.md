@@ -121,6 +121,7 @@ server {
 
 ### Docker部署
 
+#### 方法一：使用nginx镜像（简单静态托管）
 ```bash
 # 使用nginx镜像
 docker run -d \
@@ -135,6 +136,40 @@ docker run -d \
   -p 8080:80 \
   -v $(pwd):/usr/local/apache2/htdocs \
   httpd:alpine
+```
+
+#### 方法二：使用 docker-compose（推荐）
+```bash
+# 1. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，配置后端地址等参数
+
+# 2. 构建并启动服务
+docker-compose up -d
+
+# 3. 查看日志
+docker-compose logs -f frontend-user
+
+# 4. 停止服务
+docker-compose down
+```
+
+#### Docker Compose 配置说明
+
+项目包含完整的 `docker-compose.yml` 配置，支持：
+
+- **前端服务**: 基于 Flask 的代理服务器
+- **环境变量配置**: 通过 `.env` 文件管理
+- **健康检查**: 自动监控服务状态
+- **日志管理**: 持久化日志存储
+- **网络配置**: 支持与后端服务通信
+
+主要环境变量：
+```env
+BACKEND_URL=http://team_invite_web:5125  # 后端服务地址
+FRONTEND_PORT=8080                       # 前端服务端口
+FLASK_DEBUG=false                        # 调试模式
+TZ=Asia/Shanghai                         # 时区配置
 ```
 
 ### CDN部署
