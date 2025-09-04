@@ -20,31 +20,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies (optional)
-        run: |
-          if [ -f package.json ]; then
-            if [ -f package-lock.json ]; then
-              npm ci
-            else
-              npm install
-            fi
-          else
-            echo "No package.json, skipping npm install"
-          fi
-
-      - name: Build (static frontend)
-        run: |
-          if [ -f package.json ]; then
-            npm run build || echo "No build needed"
-          else
-            echo "No package.json, skipping build"
-          fi
+      # Node.js/前端构建步骤已移除：本仓库无需 Node 依赖与构建
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
