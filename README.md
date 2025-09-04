@@ -88,6 +88,23 @@ const DEFAULT_CONFIG = {
 export API_BASE_URL=https://your-backend-domain.com
 ```
 
+### 路径跳转（/admin 与 /agent）
+
+当访问前端域名下的 `/admin` 或 `/agent`（含子路径，如 `/admin/login`、`/agent/xxx`）时，会自动重定向到后端的对应路径。
+
+- 默认重定向基址来源：`.env` 中的 `BACKEND_URL`
+- 可分别覆盖：
+
+```env
+# 可选：单独为 /admin 与 /agent 指定跳转基础域名
+ADMIN_REDIRECT_BASE=https://teamapi.example.com
+AGENT_REDIRECT_BASE=https://teamapi.example.com
+```
+
+示例：
+- 访问 `https://team.xychatai.com/admin` → 跳转到 `https://teamapi.jiankong.xychatai.com/admin`
+- 访问 `https://team.xychatai.com/agent/a/b` → 跳转到 `https://teamapi.jiankong.xychatai.com/agent/a/b`
+
 ## 🌐 部署指南
 
 ### 静态文件服务器部署

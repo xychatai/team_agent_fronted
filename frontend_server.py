@@ -9,7 +9,8 @@ import os
 import sys
 import requests
 import json
-from flask import Flask, request, jsonify, send_from_directory, send_file
+from datetime import datetime
+from flask import Flask, request, jsonify, send_from_directory, send_file, redirect
 from urllib.parse import urljoin
 from dotenv import load_dotenv
 import logging
@@ -37,6 +38,11 @@ class Config:
     # 静态文件目录
     STATIC_DIR = os.path.dirname(os.path.abspath(__file__))
 
+    # 后台管理跳转基础域名（可选）
+    # 若未设置，则使用 BACKEND_URL
+    ADMIN_REDIRECT_BASE = os.environ.get('ADMIN_REDIRECT_BASE') or BACKEND_URL
+    AGENT_REDIRECT_BASE = os.environ.get('AGENT_REDIRECT_BASE') or BACKEND_URL
+
 config = Config()
 
 # ========== 静态文件服务 ==========
@@ -60,6 +66,45 @@ def assets(filename):
 def config_files(filename):
     """配置文件"""
     return send_from_directory(os.path.join(config.STATIC_DIR, 'config'), filename)
+
+# ========== 管理/Agent 跳转 ==========
+
+def _build_redirect_url(base: str, prefix: str, subpath: str) -> str:
+    # 规范化路径
+    if subpath:
+        target_path = f"/{prefix.rstrip('/')}/{subpath.lstrip('/')}"
+    else:
+        target_path = f"/{prefix.strip('/')}"
+
+    target_url = urljoin(base, target_path)
+
+    # 保留查询参数
+    if request.query_string:
+        try:
+            qs = request.query_string.decode('utf-8')
+        except Exception:
+            qs = request.query_string.decode('latin-1', errors='ignore')
+        if qs:
+            connector = '&' if ('?' in target_url) else '?'
+            target_url = f"{target_url}{connector}{qs}"
+
+    return target_url
+
+
+@app.route('/admin', defaults={'path': ''})
+@app.route('/admin/<path:path>')
+def admin_redirect(path):
+    """将 /admin* 路径重定向到后端域名"""
+    target_url = _build_redirect_url(config.ADMIN_REDIRECT_BASE, 'admin', path)
+    return redirect(target_url, code=302)
+
+
+@app.route('/agent', defaults={'path': ''})
+@app.route('/agent/<path:path>')
+def agent_redirect(path):
+    """将 /agent* 路径重定向到后端域名"""
+    target_url = _build_redirect_url(config.AGENT_REDIRECT_BASE, 'agent', path)
+    return redirect(target_url, code=302)
 
 # ========== 后端API代理 ==========
 
