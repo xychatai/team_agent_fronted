@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: xychatai/team-fronted:latest
+    pull_policy: always
+    container_name: xychatai_front
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+    environment:
+      BACKEND_URL: ${BACKEND_URL}
+      ADMIN_REDIRECT_BASE: ${ADMIN_REDIRECT_BASE:-}
+      AGENT_REDIRECT_BASE: ${AGENT_REDIRECT_BASE:-}
+      FRONTEND_HOST: 0.0.0.0
+      FRONTEND_PORT: ${FRONTEND_PORT:-8080}
+      FLASK_DEBUG: false
+      TZ: ${TZ:-Asia/Shanghai}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # 自动更新容器，定期拉取并重启到最新镜像
+  watchtower:
+    image: containrrr/watchtower:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 300 --cleanup --rolling-restart
+    environment:
+      - TZ=${TZ:-Asia/Shanghai}
+      - WATCHTOWER_LABEL_ENABLE=true
