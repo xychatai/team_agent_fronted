@@ -99,6 +99,139 @@
                     </div>
                 </el-tab-pane>
                 
+                <!-- 批量兑换 -->
+                <el-tab-pane name="batch">
+                    <template #label>
+                        <div class="tab-label">
+                            <el-icon><List /></el-icon>
+                            <span>批量兑换</span>
+                        </div>
+                    </template>
+                    <div class="tab-content">
+                        <div class="feature-card batch-card">
+                            <div class="card-header">
+                                <div class="card-icon batch-icon">
+                                    <el-icon size="28"><List /></el-icon>
+                                </div>
+                                <div class="card-title">批量兑换码使用</div>
+                                <div class="card-desc">一次性处理多个邮箱和兑换码，支持进度跟踪</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="batch-input-section">
+                                    <el-row :gutter="20">
+                                        <el-col :span="12">
+                                            <div class="input-group">
+                                                <div class="input-label">
+                                                    <el-icon><User /></el-icon>
+                                                    <span>邮箱列表（每行一个）</span>
+                                                    <span class="count-badge" v-if="batchForm.emailList.length > 0">{{ batchForm.emailList.length }}</span>
+                                                </div>
+                                                <el-input
+                                                    v-model="batchForm.emails"
+                                                    type="textarea"
+                                                    :rows="8"
+                                                    placeholder="请输入邮箱地址，每行一个&#10;例如：&#10;user1@example.com&#10;user2@example.com&#10;user3@example.com"
+                                                    class="batch-textarea"
+                                                    @input="validateBatchInput">
+                                                </el-input>
+                                            </div>
+                                        </el-col>
+                                        <el-col :span="12">
+                                            <div class="input-group">
+                                                <div class="input-label">
+                                                    <el-icon><Ticket /></el-icon>
+                                                    <span>兑换码列表（每行一个）</span>
+                                                    <span class="count-badge" v-if="batchForm.codeList.length > 0">{{ batchForm.codeList.length }}</span>
+                                                </div>
+                                                <el-input
+                                                    v-model="batchForm.codes"
+                                                    type="textarea"
+                                                    :rows="8"
+                                                    placeholder="请输入兑换码，每行一个&#10;例如：&#10;CODE123456&#10;CODE789012&#10;CODE345678"
+                                                    class="batch-textarea"
+                                                    @input="validateBatchInput">
+                                                </el-input>
+                                            </div>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+                                
+                                <div v-if="batchValidation.message" class="validation-message">
+                                    <el-alert 
+                                        :type="batchValidation.type" 
+                                        :closable="false" 
+                                        show-icon>
+                                        {{ batchValidation.message }}
+                                    </el-alert>
+                                </div>
+                                
+                                <div class="batch-actions">
+                                    <el-button 
+                                        type="primary" 
+                                        size="large"
+                                        class="action-button"
+                                        @click="handleBatchRedeem"
+                                        :disabled="!batchValidation.isValid || loading.batch"
+                                        :loading="loading.batch">
+                                        <el-icon v-if="!loading.batch"><Checked /></el-icon>
+                                        开始批量兑换
+                                    </el-button>
+                                    <el-button 
+                                        v-if="batchProgress.total > 0"
+                                        size="large"
+                                        @click="clearBatchResults">
+                                        <el-icon><Delete /></el-icon>
+                                        清空结果
+                                    </el-button>
+                                </div>
+                                
+                                <div v-if="batchProgress.total > 0" class="batch-progress-section">
+                                    <div class="progress-header">
+                                        <h3>处理进度</h3>
+                                        <div class="progress-stats">
+                                            <el-tag type="info">总计: {{ batchProgress.total }}</el-tag>
+                                            <el-tag type="success">成功: {{ batchProgress.success }}</el-tag>
+                                            <el-tag type="danger">失败: {{ batchProgress.failed }}</el-tag>
+                                            <el-tag type="warning">等待: {{ batchProgress.pending }}</el-tag>
+                                        </div>
+                                    </div>
+                                    
+                                    <el-progress 
+                                        :percentage="batchProgress.percentage" 
+                                        :status="batchProgress.percentage === 100 ? 'success' : undefined"
+                                        :stroke-width="8"
+                                        class="batch-progress-bar">
+                                    </el-progress>
+                                    
+                                    <div class="batch-results">
+                                        <div v-for="(result, index) in batchResults" :key="index" class="result-item">
+                                            <div class="result-info">
+                                                <span class="result-index">{{ index + 1 }}.</span>
+                                                <span class="result-email">{{ result.email }}</span>
+                                                <span class="result-code">{{ result.code }}</span>
+                                            </div>
+                                            <div class="result-status">
+                                                <el-tag 
+                                                    :type="result.status === 'success' ? 'success' : result.status === 'failed' ? 'danger' : 'info'"
+                                                    :class="result.status">
+                                                    <el-icon v-if="result.status === 'success'"><SuccessFilled /></el-icon>
+                                                    <el-icon v-else-if="result.status === 'failed'"><CircleCloseFilled /></el-icon>
+                                                    <el-icon v-else-if="result.status === 'processing'"><Loading /></el-icon>
+                                                    <el-icon v-else><Clock /></el-icon>
+                                                    {{ result.statusText }}
+                                                </el-tag>
+                                            </div>
+                                            <div v-if="result.message" class="result-message">
+                                                {{ result.message }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </el-tab-pane>
+                
                 <!-- 解绑功能 -->
                 <el-tab-pane name="unbind">
                     <template #label>
@@ -117,81 +250,196 @@
                                 <div class="card-desc">解绑当前兑换码，释放重复使用资格</div>
                             </div>
                             <div class="card-body">
-                                <el-form :model="unbindForm" :rules="unbindRules" ref="unbindFormRef" size="large">
-                                    <el-form-item prop="email">
-                                        <el-input 
-                                            v-model="unbindForm.email" 
-                                            placeholder="请输入您的邮箱地址"
-                                            class="input-field"
-                                            clearable>
-                                            <template #prefix>
-                                                <el-icon><User /></el-icon>
-                                            </template>
-                                        </el-input>
-                                    </el-form-item>
-                                    <el-form-item>
-                                        <el-button 
-                                            type="primary" 
-                                            size="large"
-                                            class="action-button"
-                                            @click="handleCheckStatus"
-                                            :loading="loading.status">
-                                            <el-icon v-if="!loading.status"><View /></el-icon>
-                                            查询绑定状态
-                                        </el-button>
-                                    </el-form-item>
-                                </el-form>
-                                
-                                <div v-if="statusResult" class="status-panel">
-                                    <div class="binding-info">
-                                        <el-descriptions :column="1" border size="large">
-                                            <el-descriptions-item label="绑定状态">
-                                                <el-tag :type="statusResult.has_binding ? 'success' : 'info'" size="large">
-                                                    <span v-text="statusResult.has_binding ? '已绑定' : '未绑定'"></span>
-                                                </el-tag>
-                                            </el-descriptions-item>
-                                            <el-descriptions-item v-if="statusResult.binding" label="兑换码">
-                                                <code class="code-display" v-text="statusResult.binding.redemption_code"></code>
-                                            </el-descriptions-item>
-                                            <el-descriptions-item v-if="statusResult.binding" label="母号邮箱">
-                                                <span v-text="statusResult.binding.mother_email"></span>
-                                            </el-descriptions-item>
-                                            <el-descriptions-item v-if="statusResult.binding" label="绑定类型">
-                                                <el-tag :type="statusResult.binding.type === 'warranty' ? 'warning' : 'info'" size="large">
-                                                    <span v-text="statusResult.binding.type === 'warranty' ? '质保型' : '一次性'"></span>
-                                                </el-tag>
-                                            </el-descriptions-item>
-                                            <el-descriptions-item v-if="statusResult.binding && statusResult.binding.remaining_days !== undefined" label="剩余质保天数">
-                                                <span v-text="statusResult.binding.remaining_days"></span>天
-                                            </el-descriptions-item>
-                                        </el-descriptions>
+                                <!-- 切换模式的标签页 -->
+                                <el-tabs v-model="unbindMode" type="card" class="unbind-tabs">
+                                    <el-tab-pane label="单个解绑" name="single">
+                                        <el-form :model="unbindForm" :rules="unbindRules" ref="unbindFormRef" size="large">
+                                            <el-form-item prop="email">
+                                                <el-input 
+                                                    v-model="unbindForm.email" 
+                                                    placeholder="请输入您的邮箱地址"
+                                                    class="input-field"
+                                                    clearable>
+                                                    <template #prefix>
+                                                        <el-icon><User /></el-icon>
+                                                    </template>
+                                                </el-input>
+                                            </el-form-item>
+                                            <el-form-item>
+                                                <el-button 
+                                                    type="primary" 
+                                                    size="large"
+                                                    class="action-button"
+                                                    @click="handleCheckStatus"
+                                                    :loading="loading.status">
+                                                    <el-icon v-if="!loading.status"><View /></el-icon>
+                                                    查询绑定状态
+                                                </el-button>
+                                            </el-form-item>
+                                        </el-form>
                                         
-                                        <div v-if="statusResult.binding && statusResult.binding.status === 'active'" class="unbind-actions">
-                                            <el-button 
-                                                type="danger" 
-                                                size="large"
-                                                class="unbind-button"
-                                                @click="handleUnbind"
-                                                :loading="loading.unbind">
-                                                <el-icon v-if="!loading.unbind"><Minus /></el-icon>
-                                                解绑此兑换码
-                                            </el-button>
-                                            <div class="unbind-tips">
-                                                <el-alert 
-                                                    :type="statusResult.binding.type === 'warranty' ? 'success' : 'warning'" 
-                                                    :closable="false"
-                                                    show-icon>
-                                                    <template v-if="statusResult.binding.type === 'warranty'">
-                                                        ✅ 质保型卡密解绑后可以重新使用
-                                                    </template>
-                                                    <template v-else>
-                                                        ⚠️ 一次性卡密在母号活跃时可解绑并重新使用，母号封禁时无法解绑
-                                                    </template>
-                                                </el-alert>
+                                        <div v-if="statusResult" class="status-panel">
+                                            <div class="binding-info">
+                                                <el-descriptions :column="1" border size="large">
+                                                    <el-descriptions-item label="绑定状态">
+                                                        <el-tag :type="statusResult.has_binding ? 'success' : 'info'" size="large">
+                                                            <span v-text="statusResult.has_binding ? '已绑定' : '未绑定'"></span>
+                                                        </el-tag>
+                                                    </el-descriptions-item>
+                                                    <el-descriptions-item v-if="statusResult.binding" label="兑换码">
+                                                        <code class="code-display" v-text="statusResult.binding.redemption_code"></code>
+                                                    </el-descriptions-item>
+                                                    <el-descriptions-item v-if="statusResult.binding" label="母号邮箱">
+                                                        <span v-text="statusResult.binding.mother_email"></span>
+                                                    </el-descriptions-item>
+                                                    <el-descriptions-item v-if="statusResult.binding" label="绑定类型">
+                                                        <el-tag :type="statusResult.binding.type === 'warranty' ? 'warning' : 'info'" size="large">
+                                                            <span v-text="statusResult.binding.type === 'warranty' ? '质保型' : '一次性'"></span>
+                                                        </el-tag>
+                                                    </el-descriptions-item>
+                                                    <el-descriptions-item v-if="statusResult.binding && statusResult.binding.remaining_days !== undefined" label="剩余质保天数">
+                                                        <span v-text="statusResult.binding.remaining_days"></span>天
+                                                    </el-descriptions-item>
+                                                </el-descriptions>
+                                                
+                                                <div v-if="statusResult.binding && statusResult.binding.status === 'active'" class="unbind-actions">
+                                                    <el-button 
+                                                        type="danger" 
+                                                        size="large"
+                                                        class="unbind-button"
+                                                        @click="handleUnbind"
+                                                        :loading="loading.unbind">
+                                                        <el-icon v-if="!loading.unbind"><Minus /></el-icon>
+                                                        解绑此兑换码
+                                                    </el-button>
+                                                    <div class="unbind-tips">
+                                                        <el-alert 
+                                                            :type="statusResult.binding.type === 'warranty' ? 'success' : 'warning'" 
+                                                            :closable="false"
+                                                            show-icon>
+                                                            <template v-if="statusResult.binding.type === 'warranty'">
+                                                                ✅ 质保型卡密解绑后可以重新使用
+                                                            </template>
+                                                            <template v-else>
+                                                                ⚠️ 一次性卡密在母号活跃时可解绑并重新使用，母号封禁时无法解绑
+                                                            </template>
+                                                        </el-alert>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
+                                    </el-tab-pane>
+                                    
+                                    <el-tab-pane label="批量解绑" name="batch">
+                                        <div class="batch-unbind-section">
+                                            <div class="input-group">
+                                                <div class="input-label">
+                                                    <el-icon><User /></el-icon>
+                                                    <span>邮箱列表（每行一个）</span>
+                                                    <span class="count-badge" v-if="batchUnbindForm.emailList.length > 0">{{ batchUnbindForm.emailList.length }}</span>
+                                                </div>
+                                                <el-input
+                                                    v-model="batchUnbindForm.emails"
+                                                    type="textarea"
+                                                    :rows="6"
+                                                    placeholder="请输入要解绑的邮箱地址，每行一个&#10;例如：&#10;user1@example.com&#10;user2@example.com&#10;user3@example.com"
+                                                    class="batch-textarea"
+                                                    @input="validateBatchUnbindInput">
+                                                </el-input>
+                                            </div>
+                                            
+                                            <div v-if="batchUnbindValidation.message" class="validation-message">
+                                                <el-alert 
+                                                    :type="batchUnbindValidation.type" 
+                                                    :closable="false" 
+                                                    show-icon>
+                                                    {{ batchUnbindValidation.message }}
+                                                </el-alert>
+                                            </div>
+                                            
+                                            <div class="batch-actions">
+                                                <el-button 
+                                                    type="warning" 
+                                                    size="large"
+                                                    class="action-button"
+                                                    @click="handleBatchCheckStatus"
+                                                    :disabled="!batchUnbindValidation.isValid || loading.batchUnbindCheck"
+                                                    :loading="loading.batchUnbindCheck">
+                                                    <el-icon v-if="!loading.batchUnbindCheck"><View /></el-icon>
+                                                    批量查询绑定状态
+                                                </el-button>
+                                                <el-button 
+                                                    v-if="batchUnbindResults.length > 0 && batchUnbindResults.some(r => r.canUnbind)"
+                                                    type="danger" 
+                                                    size="large"
+                                                    class="unbind-button"
+                                                    @click="handleBatchUnbind"
+                                                    :loading="loading.batchUnbind">
+                                                    <el-icon v-if="!loading.batchUnbind"><Minus /></el-icon>
+                                                    批量解绑所有可解绑项
+                                                </el-button>
+                                                <el-button 
+                                                    v-if="batchUnbindProgress.total > 0"
+                                                    size="large"
+                                                    @click="clearBatchUnbindResults">
+                                                    <el-icon><Delete /></el-icon>
+                                                    清空结果
+                                                </el-button>
+                                            </div>
+                                            
+                                            <div v-if="batchUnbindProgress.total > 0" class="batch-progress-section">
+                                                <div class="progress-header">
+                                                    <h3>处理进度</h3>
+                                                    <div class="progress-stats">
+                                                        <el-tag type="info">总计: {{ batchUnbindProgress.total }}</el-tag>
+                                                        <el-tag type="success">成功: {{ batchUnbindProgress.success }}</el-tag>
+                                                        <el-tag type="danger">失败: {{ batchUnbindProgress.failed }}</el-tag>
+                                                        <el-tag type="warning">等待: {{ batchUnbindProgress.pending }}</el-tag>
+                                                    </div>
+                                                </div>
+                                                
+                                                <el-progress 
+                                                    :percentage="batchUnbindProgress.percentage" 
+                                                    :status="batchUnbindProgress.percentage === 100 ? 'success' : undefined"
+                                                    :stroke-width="8"
+                                                    class="batch-progress-bar">
+                                                </el-progress>
+                                                
+                                                <div class="batch-results">
+                                                    <div v-for="(result, index) in batchUnbindResults" :key="index" class="result-item unbind-result-item">
+                                                        <div class="result-info">
+                                                            <span class="result-index">{{ index + 1 }}.</span>
+                                                            <span class="result-email">{{ result.email }}</span>
+                                                            <span v-if="result.binding" class="result-code">{{ result.binding.redemption_code }}</span>
+                                                        </div>
+                                                        <div class="result-status">
+                                                            <el-tag 
+                                                                :type="getUnbindResultTagType(result)"
+                                                                :class="result.status">
+                                                                <el-icon v-if="result.status === 'success'"><SuccessFilled /></el-icon>
+                                                                <el-icon v-else-if="result.status === 'failed'"><CircleCloseFilled /></el-icon>
+                                                                <el-icon v-else-if="result.status === 'processing'"><Loading /></el-icon>
+                                                                <el-icon v-else><Clock /></el-icon>
+                                                                {{ result.statusText }}
+                                                            </el-tag>
+                                                        </div>
+                                                        <div v-if="result.binding && result.status === 'checked'" class="binding-details">
+                                                            <div class="binding-summary">
+                                                                <el-tag :type="result.binding.type === 'warranty' ? 'warning' : 'info'" size="small">
+                                                                    {{ result.binding.type === 'warranty' ? '质保型' : '一次性' }}
+                                                                </el-tag>
+                                                                <span class="mother-email">{{ result.binding.mother_email }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div v-if="result.message" class="result-message">
+                                                            {{ result.message }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </el-tab-pane>
+                                </el-tabs>
                             </div>
                         </div>
                     </div>

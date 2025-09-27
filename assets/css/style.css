@@ -185,6 +185,12 @@ body {
     box-shadow: 0 4px 16px rgba(240, 147, 251, 0.3);
 }
 
+.batch-icon {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #8b4513;
+    box-shadow: 0 4px 16px rgba(255, 183, 107, 0.3);
+}
+
 .help-icon {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     color: white;
@@ -739,6 +745,800 @@ body {
     .el-button {
         display: none;
     }
+}
+
+/* 批量兑换特殊样式 */
+.batch-input-section {
+    margin-bottom: 24px;
+}
+
+.input-group {
+    margin-bottom: 16px;
+}
+
+.input-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+}
+
+.count-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+.batch-textarea .el-textarea__inner {
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fafbfc;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 160px;
+    transition: all 0.3s ease;
+}
+
+.batch-textarea .el-textarea__inner:hover {
+    background: white;
+    border-color: #d1d5db;
+}
+
+.batch-textarea .el-textarea__inner:focus {
+    background: white;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.validation-message {
+    margin: 16px 0;
+}
+
+.batch-actions {
+    margin: 24px 0;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.batch-actions .el-button {
+    min-width: 140px;
+}
+
+.batch-progress-section {
+    margin-top: 32px;
+    padding: 24px;
+    background: linear-gradient(145deg, #f8fafe 0%, #f0f4ff 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.progress-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.progress-stats {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.progress-stats .el-tag {
+    font-size: 12px;
+    padding: 4px 8px;
+    font-weight: 500;
+}
+
+.batch-progress-bar {
+    margin-bottom: 24px;
+}
+
+.batch-results {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.result-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.result-item:hover {
+    background: #fafbfc;
+    border-color: #d1d5db;
+}
+
+.result-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.result-index {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 14px;
+    width: 24px;
+    text-align: right;
+}
+
+.result-email {
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+}
+
+.result-code {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 12px;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #6b7280;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.result-status {
+    flex-shrink: 0;
+}
+
+.result-status .el-tag {
+    font-size: 12px;
+    padding: 4px 8px;
+    font-weight: 500;
+    border: none;
+}
+
+.result-status .el-tag.success {
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.result-status .el-tag.failed {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.result-status .el-tag.processing {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.result-status .el-icon {
+    margin-right: 4px;
+}
+
+.result-message {
+    width: 100%;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6b7280;
+    padding: 4px 8px;
+    background: #f9fafb;
+    border-radius: 4px;
+    border-left: 3px solid #e5e7eb;
+}
+
+.result-item:has(.result-status .success) .result-message {
+    border-left-color: #10b981;
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.result-item:has(.result-status .failed) .result-message {
+    border-left-color: #ef4444;
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* 响应式适配 - 批量兑换 */
+@media (max-width: 768px) {
+    .batch-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .batch-actions .el-button {
+        min-width: auto;
+    }
+    
+    .progress-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .progress-stats {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .result-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .result-info {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .result-email {
+        max-width: none;
+        flex: 1;
+    }
+    
+    .result-status {
+        align-self: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .batch-progress-section {
+        padding: 16px;
+    }
+    
+    .progress-header h3 {
+        font-size: 16px;
+    }
+    
+    .result-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .result-email,
+    .result-code {
+        max-width: none;
+    }
+}
+
+/* 批量解绑特殊样式 */
+.unbind-tabs {
+    margin-bottom: 20px;
+}
+
+.unbind-tabs .el-tabs__header {
+    margin-bottom: 16px;
+}
+
+.batch-unbind-section {
+    margin-top: 16px;
+}
+
+.unbind-result-item {
+    border-left: 4px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.unbind-result-item:has(.result-status .el-tag--warning) {
+    border-left-color: #f59e0b;
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, transparent 20%);
+}
+
+.unbind-result-item:has(.result-status .el-tag--success) {
+    border-left-color: #10b981;
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, transparent 20%);
+}
+
+.unbind-result-item:has(.result-status .el-tag--danger) {
+    border-left-color: #ef4444;
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, transparent 20%);
+}
+
+.binding-details {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.binding-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.mother-email {
+    font-size: 12px;
+    color: #6c757d;
+    font-family: 'Monaco', 'Consolas', monospace;
+    background: #f1f3f4;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 解绑按钮颜色变体 */
+.action-button.el-button--warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.action-button.el-button--warning:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+}
+
+/* 解绑结果项特殊状态 */
+.result-status .el-tag--warning .el-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* 批量解绑特定响应式 */
+@media (max-width: 768px) {
+    .binding-summary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .mother-email {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .unbind-tabs .el-tabs__nav {
+        width: 100%;
+        display: flex;
+    }
+    
+    .unbind-tabs .el-tabs__item {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .binding-details {
+        padding: 6px 8px;
+        margin-top: 6px;
+    }
+    
+    .binding-summary .el-tag {
+        font-size: 11px;
+        padding: 2px 6px;
+    }
+    
+    .mother-email {
+        font-size: 11px;
+        padding: 1px 4px;
+    }
+}
+
+/* 批量解绑结果弹窗样式 */
+.batch-result-dialog {
+    width: 90% !important;
+    max-width: 800px !important;
+}
+
+.batch-result-dialog .el-message-box__content {
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.batch-unbind-result-dialog {
+    font-family: inherit;
+    line-height: 1.6;
+}
+
+.result-summary {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.summary-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 16px 24px;
+    border-radius: 12px;
+    min-width: 120px;
+}
+
+.success-stat {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 2px solid #bbf7d0;
+}
+
+.failed-stat {
+    background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+    border: 2px solid #fca5a5;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.success-stat .stat-number {
+    color: #16a34a;
+}
+
+.failed-stat .stat-number {
+    color: #dc2626;
+}
+
+.stat-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.result-section {
+    margin-bottom: 24px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.success-section {
+    background: linear-gradient(145deg, #f0fdf4 0%, #f9fafb 100%);
+    border-color: #bbf7d0;
+}
+
+.failed-section {
+    background: linear-gradient(145deg, #fef2f2 0%, #f9fafb 100%);
+    border-color: #fca5a5;
+}
+
+.result-section h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 8px;
+}
+
+.code-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
+.code-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.code-item:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.code-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.code-display {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+
+.code-display.small {
+    font-size: 12px;
+    padding: 4px 8px;
+    margin-bottom: 0;
+}
+
+.code-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.code-type {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.code-type.warranty {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.code-type.one-time {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.email-info {
+    font-size: 12px;
+    color: #6b7280;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+.reuse-status {
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.reusable {
+    color: #16a34a;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.not-reusable {
+    color: #ea580c;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.copy-actions {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.copy-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.copy-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.copy-button:active {
+    transform: translateY(0);
+}
+
+.failed-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.failed-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #fca5a5;
+    border-left: 4px solid #ef4444;
+}
+
+.failed-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.email-display {
+    font-weight: 500;
+    color: #1f2937;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.error-message {
+    font-size: 12px;
+    color: #dc2626;
+    background: #fef2f2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border-left: 3px solid #fca5a5;
+}
+
+.dialog-tips {
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.tip-item {
+    margin-bottom: 8px;
+    color: #374151;
+}
+
+.tip-content {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+/* 弹窗响应式设计 */
+@media (max-width: 768px) {
+    .batch-result-dialog {
+        width: 95% !important;
+        margin: 10px !important;
+    }
+    
+    .summary-stats {
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+    }
+    
+    .stat-item {
+        min-width: 100px;
+        padding: 12px 20px;
+    }
+    
+    .stat-number {
+        font-size: 24px;
+    }
+    
+    .code-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .reuse-status {
+        text-align: left;
+        width: 100%;
+    }
+    
+    .email-info {
+        max-width: none;
+    }
+    
+    .failed-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .batch-result-dialog .el-message-box__content {
+        padding: 12px;
+        max-height: 70vh;
+    }
+    
+    .result-section {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+    
+    .code-display {
+        font-size: 12px;
+        padding: 4px 8px;
+        word-break: break-all;
+    }
+    
+    .copy-button {
+        width: 100%;
+        padding: 12px;
+        font-size: 13px;
+    }
+    
+    .dialog-tips {
+        padding: 12px;
+        margin-top: 16px;
+    }
+    
+    .tip-content {
+        font-size: 12px;
+    }
+}
+
+/* 滚动条样式（弹窗内） */
+.code-list::-webkit-scrollbar,
+.failed-list::-webkit-scrollbar,
+.batch-result-dialog .el-message-box__content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.code-list::-webkit-scrollbar-track,
+.failed-list::-webkit-scrollbar-track,
+.batch-result-dialog .el-message-box__content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.code-list::-webkit-scrollbar-thumb,
+.failed-list::-webkit-scrollbar-thumb,
+.batch-result-dialog .el-message-box__content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.code-list::-webkit-scrollbar-thumb:hover,
+.failed-list::-webkit-scrollbar-thumb:hover,
+.batch-result-dialog .el-message-box__content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 /* 深色模式支持（预留） */
