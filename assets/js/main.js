@@ -20,7 +20,9 @@ const app = createApp({
             help: false,
             batch: false,
             batchUnbindCheck: false,
-            batchUnbind: false
+            batchUnbind: false,
+            cleanupPreview: false,
+            cleanupExecute: false
         });
         
         // 兑换表单相关
@@ -102,6 +104,19 @@ const app = createApp({
         });
         
         const batchResults = ref([]);
+        
+        // 团队清理相关
+        const cleanupFormRef = ref(null);
+        const cleanupForm = reactive({
+            code: ''
+        });
+        const cleanupRules = {
+            code: [
+                { required: true, message: '请输入兑换码', trigger: 'blur' }
+            ]
+        };
+        const cleanupPreviewResult = ref(null);
+        const cleanupExecuteResult = ref(null);
         
         // 监听标签页切换
         const handleTabChange = (tabName) => {
@@ -699,6 +714,85 @@ const app = createApp({
         // 将复制函数暴露到全局作用域
         window.copySuccessCodes = copySuccessCodes;
         
+        // 团队清理预览处理
+        const handleCleanupPreview = () => {
+            cleanupFormRef.value.validate(async (valid) => {
+                if (valid) {
+                    loading.cleanupPreview = true;
+                    cleanupPreviewResult.value = null;
+                    cleanupExecuteResult.value = null;
+                    
+                    try {
+                        const data = await window.userApi.cleanupPreview(cleanupForm.code);
+                        cleanupPreviewResult.value = data;
+                        
+                        if (data.success) {
+                            ElMessage.success(`预览成功！发现 ${data.will_delete_count} 个可清理成员`);
+                        } else {
+                            ElMessage.error(data.error || '预览失败');
+                        }
+                    } catch (error) {
+                        console.error('清理预览请求失败:', error);
+                        cleanupPreviewResult.value = error;
+                        ElMessage.error(error.error || '请求失败，请重试');
+                    } finally {
+                        loading.cleanupPreview = false;
+                    }
+                }
+            });
+        };
+        
+        // 团队清理执行处理
+        const handleCleanupExecute = async () => {
+            if (!cleanupPreviewResult.value || !cleanupPreviewResult.value.success) {
+                ElMessage.warning('请先进行预览');
+                return;
+            }
+            
+            const previewData = cleanupPreviewResult.value;
+            
+            try {
+                await ElMessageBox.confirm(
+                    `<div style="line-height: 1.8;">
+                        <p><strong>确定要执行团队清理吗？</strong></p>
+                        <p>母号：${previewData.mother_email}</p>
+                        <p>将删除 <span style="color: #f56c6c; font-weight: bold;">${previewData.will_delete_count}</span> 个非用户成员</p>
+                        <p>将保留 <span style="color: #67c23a; font-weight: bold;">${previewData.will_keep_count}</span> 个已绑定用户</p>
+                        <p style="color: #e6a23c; margin-top: 10px;">⚠️ 此操作不可撤销！</p>
+                    </div>`,
+                    '确认执行清理',
+                    {
+                        confirmButtonText: '确定执行',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                        dangerouslyUseHTMLString: true
+                    }
+                );
+                
+                loading.cleanupExecute = true;
+                cleanupExecuteResult.value = null;
+                
+                const data = await window.userApi.cleanupExecute(cleanupForm.code);
+                cleanupExecuteResult.value = data;
+                
+                if (data.success) {
+                    ElMessage.success(`清理完成！成功删除 ${data.deleted_count} 个成员`);
+                    // 清理成功后重置预览结果
+                    cleanupPreviewResult.value = null;
+                } else {
+                    ElMessage.error(data.error || '清理失败');
+                }
+            } catch (error) {
+                if (error !== 'cancel') {
+                    console.error('清理执行请求失败:', error);
+                    cleanupExecuteResult.value = error;
+                    ElMessage.error(error.error || '请求失败，请重试');
+                }
+            } finally {
+                loading.cleanupExecute = false;
+            }
+        };
+        
         // 页面加载完成后初始化帮助内容
         Vue.nextTick(() => {
             initializeHelp();
@@ -885,6 +979,15 @@ const app = createApp({
             redeemRules,
             redeemResult,
             handleRedeem,
+            
+            // 团队清理相关
+            cleanupForm,
+            cleanupFormRef,
+            cleanupRules,
+            cleanupPreviewResult,
+            cleanupExecuteResult,
+            handleCleanupPreview,
+            handleCleanupExecute,
             
             // 解绑相关
             unbindMode,

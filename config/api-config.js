@@ -16,7 +16,11 @@ const DEFAULT_CONFIG = {
             status: '/backend_api/user/status', 
             confirm: '/backend_api/user/confirm',
             unbind: '/backend_api/user/unbind',
-            help: '/backend_api/user/help'
+            help: '/backend_api/user/help',
+            cleanup: {
+                preview: '/backend_api/user/cleanup/preview',
+                execute: '/backend_api/user/cleanup/execute'
+            }
         },
         // 质保相关接口
         warranty: {
@@ -27,8 +31,8 @@ const DEFAULT_CONFIG = {
     
     // 请求配置
     request: {
-        timeout: 30000, // 30秒超时
-        retryTimes: 3,  // 重试次数
+        timeout: 300000, // 5分钟超时
+        retryTimes: 3,   // 重试次数
         retryDelay: 1000 // 重试延迟(ms)
     },
     

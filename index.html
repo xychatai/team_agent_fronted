@@ -232,6 +232,179 @@
                     </div>
                 </el-tab-pane>
                 
+                <!-- 团队清理 -->
+                <el-tab-pane name="cleanup">
+                    <template #label>
+                        <div class="tab-label">
+                            <el-icon><Delete /></el-icon>
+                            <span>团队清理</span>
+                        </div>
+                    </template>
+                    <div class="tab-content">
+                        <div class="feature-card cleanup-card">
+                            <div class="card-header">
+                                <div class="card-icon cleanup-icon">
+                                    <el-icon size="28"><Delete /></el-icon>
+                                </div>
+                                <div class="card-title">团队成员清理</div>
+                                <div class="card-desc">清理母号团队中的非用户成员，保护已绑定用户</div>
+                            </div>
+                            <div class="card-body">
+                                <el-form :model="cleanupForm" :rules="cleanupRules" ref="cleanupFormRef" size="large">
+                                    <el-form-item prop="code">
+                                        <el-input 
+                                            v-model="cleanupForm.code" 
+                                            placeholder="请输入您的兑换码"
+                                            class="input-field"
+                                            clearable>
+                                            <template #prefix>
+                                                <el-icon><Ticket /></el-icon>
+                                            </template>
+                                        </el-input>
+                                    </el-form-item>
+                                    <el-form-item>
+                                        <el-button 
+                                            type="warning" 
+                                            size="large"
+                                            class="action-button"
+                                            @click="handleCleanupPreview"
+                                            :loading="loading.cleanupPreview">
+                                            <el-icon v-if="!loading.cleanupPreview"><View /></el-icon>
+                                            预览清理结果
+                                        </el-button>
+                                    </el-form-item>
+                                </el-form>
+                                
+                                <div v-if="cleanupPreviewResult" class="cleanup-preview-panel">
+                                    <div v-if="cleanupPreviewResult.success" class="preview-content">
+                                        <div class="preview-header">
+                                            <div class="preview-icon">
+                                                <el-icon size="48" color="#e6a23c"><InfoFilled /></el-icon>
+                                            </div>
+                                            <div class="preview-title">清理预览结果</div>
+                                            <div class="preview-subtitle">母号：{{ cleanupPreviewResult.mother_email }}</div>
+                                        </div>
+                                        
+                                        <div class="cleanup-stats">
+                                            <div class="stat-card total-card">
+                                                <div class="stat-number">{{ cleanupPreviewResult.total_members }}</div>
+                                                <div class="stat-label">总成员数</div>
+                                            </div>
+                                            <div class="stat-card delete-card">
+                                                <div class="stat-number">{{ cleanupPreviewResult.will_delete_count }}</div>
+                                                <div class="stat-label">将删除</div>
+                                            </div>
+                                            <div class="stat-card keep-card">
+                                                <div class="stat-number">{{ cleanupPreviewResult.will_keep_count }}</div>
+                                                <div class="stat-label">将保留</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="members-lists">
+                                            <div class="members-section will-delete">
+                                                <h4>将删除的成员 ({{ cleanupPreviewResult.will_delete_count }}个)</h4>
+                                                <div v-if="cleanupPreviewResult.will_delete.length > 0" class="member-list">
+                                                    <div v-for="email in cleanupPreviewResult.will_delete" :key="email" class="member-item delete-item">
+                                                        <el-icon><Close /></el-icon>
+                                                        <span>{{ email }}</span>
+                                                    </div>
+                                                </div>
+                                                <div v-else class="empty-list">无需删除的成员</div>
+                                            </div>
+                                            
+                                            <div class="members-section will-keep">
+                                                <h4>将保留的成员 ({{ cleanupPreviewResult.will_keep_count }}个)</h4>
+                                                <div v-if="cleanupPreviewResult.will_keep.length > 0" class="member-list">
+                                                    <div v-for="email in cleanupPreviewResult.will_keep" :key="email" class="member-item keep-item">
+                                                        <el-icon><Check /></el-icon>
+                                                        <span>{{ email }}</span>
+                                                    </div>
+                                                </div>
+                                                <div v-else class="empty-list">无保留成员</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="cleanup-actions">
+                                            <el-button 
+                                                type="danger" 
+                                                size="large"
+                                                class="execute-button"
+                                                @click="handleCleanupExecute"
+                                                :loading="loading.cleanupExecute">
+                                                <el-icon v-if="!loading.cleanupExecute"><Delete /></el-icon>
+                                                确认执行清理
+                                            </el-button>
+                                            <div class="warning-text">
+                                                <el-alert 
+                                                    type="warning" 
+                                                    :closable="false"
+                                                    show-icon>
+                                                    ⚠️ 此操作不可撤销，请仔细确认清理范围
+                                                </el-alert>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-else class="error-content">
+                                        <div class="result-icon">
+                                            <el-icon size="48" color="#f56c6c"><CircleCloseFilled /></el-icon>
+                                        </div>
+                                        <div class="result-title">预览失败</div>
+                                        <div class="result-message" v-text="cleanupPreviewResult.error"></div>
+                                    </div>
+                                </div>
+                                
+                                <div v-if="cleanupExecuteResult" :class="['result-panel', cleanupExecuteResult.success ? 'success-panel' : 'error-panel']">
+                                    <div v-if="cleanupExecuteResult.success" class="success-content">
+                                        <div class="result-icon">
+                                            <el-icon size="48" color="#67c23a"><SuccessFilled /></el-icon>
+                                        </div>
+                                        <div class="result-title">清理完成！</div>
+                                        <div class="cleanup-summary">
+                                            <div class="summary-stats">
+                                                <div class="summary-item">
+                                                    <span class="label">删除成功：</span>
+                                                    <span class="value success">{{ cleanupExecuteResult.deleted_count }}个</span>
+                                                </div>
+                                                <div class="summary-item" v-if="cleanupExecuteResult.failed_count > 0">
+                                                    <span class="label">删除失败：</span>
+                                                    <span class="value failed">{{ cleanupExecuteResult.failed_count }}个</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div v-if="cleanupExecuteResult.deleted_emails.length > 0" class="deleted-list">
+                                                <h5>已删除的成员：</h5>
+                                                <div class="email-list">
+                                                    <div v-for="email in cleanupExecuteResult.deleted_emails" :key="email" class="email-item deleted">
+                                                        <el-icon><Check /></el-icon>
+                                                        <span>{{ email }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div v-if="cleanupExecuteResult.failed_deletions && cleanupExecuteResult.failed_deletions.length > 0" class="failed-list">
+                                                <h5>删除失败的成员：</h5>
+                                                <div class="failed-items">
+                                                    <div v-for="failure in cleanupExecuteResult.failed_deletions" :key="failure.email" class="failed-item">
+                                                        <div class="failed-email">{{ failure.email }}</div>
+                                                        <div class="failed-reason">{{ failure.error }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-else class="error-content">
+                                        <div class="result-icon">
+                                            <el-icon size="48" color="#f56c6c"><CircleCloseFilled /></el-icon>
+                                        </div>
+                                        <div class="result-title">清理失败</div>
+                                        <div class="result-message" v-text="cleanupExecuteResult.error"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </el-tab-pane>
+                
                 <!-- 解绑功能 -->
                 <el-tab-pane name="unbind">
                     <template #label>

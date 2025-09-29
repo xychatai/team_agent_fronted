@@ -203,6 +203,24 @@ class UserApi {
         }
         return this.client.post('user.unbind', data);
     }
+
+    /**
+     * 预览团队清理结果
+     * @param {string} code - 兑换码
+     * @returns {Promise} 清理预览结果
+     */
+    async cleanupPreview(code) {
+        return this.client.post('user.cleanup.preview', { code });
+    }
+
+    /**
+     * 执行团队清理
+     * @param {string} code - 兑换码
+     * @returns {Promise} 清理执行结果
+     */
+    async cleanupExecute(code) {
+        return this.client.post('user.cleanup.execute', { code });
+    }
 }
 
 // 质保API类

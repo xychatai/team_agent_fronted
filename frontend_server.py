@@ -146,7 +146,7 @@ def backend_proxy(api_path):
             json=data if request.is_json else None,
             data=data if not request.is_json else None,
             params=params,
-            timeout=30
+            timeout=300  # 5分钟超时
         )
         
         logger.info(f"后端响应: {response.status_code}")
