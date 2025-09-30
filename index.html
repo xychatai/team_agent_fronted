@@ -421,6 +421,13 @@
                                 </div>
                                 <div class="card-title">解绑管理</div>
                                 <div class="card-desc">解绑当前兑换码，释放重复使用资格</div>
+                                <el-alert 
+                                    title="💡 温馨提示" 
+                                    type="info" 
+                                    :closable="false"
+                                    show-icon>
+                                    解绑成功后可能会产生新的兑换码，请注意查收并妥善保存
+                                </el-alert>
                             </div>
                             <div class="card-body">
                                 <!-- 切换模式的标签页 -->

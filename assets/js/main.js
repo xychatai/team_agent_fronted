@@ -626,7 +626,7 @@ const app = createApp({
                             } else {
                                 codeDisplay = `${oldCode} <span style="color: #ef4444; font-size: 11px;">(已作废)</span>`;
                                 isReusable = false;
-                                reusableText = '⚠️ 已作废，需新码';
+                                reusableText = '⚠️ 母号已封禁';
                             }
                         }
                     }
@@ -637,7 +637,7 @@ const app = createApp({
                                 <div class="code-display">${codeDisplay}</div>
                                 <div class="code-meta">
                                     <span class="code-type ${item.binding.type}">${codeType}</span>
-                                    <span class="email-info">${item.code}</span>
+                                    <span class="email-info">${newCode && newCode !== oldCode ? newCode : oldCode}</span>
                                 </div>
                             </div>
                             <div class="reuse-status">
@@ -694,15 +694,25 @@ const app = createApp({
                         <div class="tip-content">
                             • 质保型兑换码解绑后总是可以重新使用<br>
                             • 一次性兑换码解绑成功说明母号活跃，可以重新使用<br>
-                            • 只有在母号封禁等特殊情况下才会显示"不可重用"<br>
+                            • 母号已封禁的兑换码无法产生新的兑换码<br>
                             • 请妥善保存上述兑换码，避免丢失
                         </div>
                     </div>
                 </div>
             `;
             
-            // 存储成功的兑换码列表用于复制功能（优先使用新兑换码）
-            window.batchUnbindSuccessCodes = successItems.map(item => {
+            // 存储成功的兑换码列表用于复制功能（只复制可用的兑换码）
+            window.batchUnbindSuccessCodes = successItems.filter(item => {
+                const unbindData = item.unbindResponse || {};
+                const canReuse = unbindData.can_reuse;
+                const newCode = unbindData.new_redemption_code;
+                const oldCode = unbindData.old_redemption_code || item.binding.redemption_code;
+                
+                // 质保型总是可用，或者一次性且可重用，或者有新兑换码
+                return item.binding.type === 'warranty' || 
+                       canReuse !== false || 
+                       (newCode && newCode !== oldCode);
+            }).map(item => {
                 const unbindData = item.unbindResponse || {};
                 const oldCode = unbindData.old_redemption_code || item.binding.redemption_code;
                 const newCode = unbindData.new_redemption_code;
@@ -1032,16 +1042,16 @@ const app = createApp({
                             }
                         );
                     } else {
-                        // 没有生成新兑换码，需要联系管理员
+                        // 没有生成新兑换码，母号已封禁
                         ElMessageBox.alert(
                             `<div style="line-height: 1.8;">
                                 <p><strong>✓ 一次性卡密解绑成功！</strong></p>
                                 <p>原兑换码: <strong>${oldCode}</strong> (已作废)</p>
-                                <p style="color: #e6a23c;">注意：原兑换码不可重用，需要新的兑换码才能重新加入。</p>
-                                <p>下一步：</p>
+                                <p style="color: #e6a23c;">注意：母号已被封禁，无法产生新的兑换码。</p>
+                                <p>原因：</p>
                                 <ul style="text-align: left; margin-left: 20px;">
-                                    <li>请联系管理员获取新的兑换码</li>
-                                    <li>或到管理后台生成新的兑换码</li>
+                                    <li>母号已封禁，无法生成新兑换码</li>
+                                    <li>原兑换码已失效且不可重用</li>
                                 </ul>
                             </div>`,
                             '解绑成功',
