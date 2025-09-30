@@ -16,6 +16,7 @@ const DEFAULT_CONFIG = {
             status: '/backend_api/user/status', 
             confirm: '/backend_api/user/confirm',
             unbind: '/backend_api/user/unbind',
+            unbind_confirm: '/backend_api/user/unbind/confirm',
             help: '/backend_api/user/help',
             cleanup: {
                 preview: '/backend_api/user/cleanup/preview',

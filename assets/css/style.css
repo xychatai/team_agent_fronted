@@ -1942,6 +1942,138 @@ body {
     background: #a8a8a8;
 }
 
+/* 脱敏邮箱样式 */
+.masked-email {
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    color: #374151;
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    display: inline-block;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.user-email {
+    font-size: 11px;
+    color: #6b7280;
+    font-family: 'Monaco', 'Consolas', monospace;
+    background: #f9fafb;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+}
+
+/* 解绑确认面板样式 */
+.confirmation-panel {
+    margin-top: 24px;
+    padding: 24px;
+    background: linear-gradient(145deg, #fefbf3 0%, #fff7ed 100%);
+    border: 2px solid #fbbf24;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15);
+}
+
+.confirmation-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.confirmation-icon {
+    margin-bottom: 16px;
+}
+
+.confirmation-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 8px;
+}
+
+.confirmation-content .el-descriptions {
+    margin-bottom: 20px;
+}
+
+.confirmation-warning {
+    margin: 20px 0;
+}
+
+.confirmation-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.confirm-unbind-button {
+    min-width: 120px;
+    height: 44px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* 查询模式选择样式 */
+.query-mode-group .el-radio {
+    margin-right: 32px;
+    font-weight: 500;
+}
+
+.query-mode-group .el-radio__label {
+    color: #374151;
+    font-size: 14px;
+}
+
+.query-mode-group .el-radio.is-checked .el-radio__label {
+    color: #667eea;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .confirmation-panel {
+        padding: 20px;
+        margin: 16px 0;
+    }
+    
+    .confirmation-title {
+        font-size: 18px;
+    }
+    
+    .confirmation-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .confirm-unbind-button {
+        width: 100%;
+    }
+    
+    .masked-email {
+        font-size: 12px;
+        padding: 3px 6px;
+    }
+    
+    .query-mode-group .el-radio {
+        margin-right: 24px;
+        margin-bottom: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .query-mode-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .query-mode-group .el-radio {
+        margin-right: 0;
+        margin-bottom: 0;
+    }
+}
+
 /* 深色模式支持（预留） */
 @media (prefers-color-scheme: dark) {
     /* 可以在这里添加深色模式样式 */

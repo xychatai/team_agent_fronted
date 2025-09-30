@@ -13,7 +13,7 @@ const app = createApp({
         const activeTab = ref('redeem');
         const loading = reactive({
             redeem: false,
-            status: false,
+            unbindConfirm: false,
             warranty: false,
             replace: false,
             unbind: false,
@@ -46,20 +46,19 @@ const app = createApp({
         const unbindMode = ref('single');
         const unbindFormRef = ref(null);
         const unbindForm = reactive({
-            email: ''
+            code: ''
         });
         const unbindRules = {
-            email: [
-                { required: true, message: '请输入邮箱', trigger: 'blur' },
-                { type: 'email', message: '请输入有效的邮箱地址', trigger: 'blur' }
+            code: [
+                { required: true, message: '请输入兑换码', trigger: 'blur' }
             ]
         };
-        const statusResult = ref(null);
+        const unbindConfirmation = ref(null);
         
         // 批量解绑相关
         const batchUnbindForm = reactive({
-            emails: '',
-            emailList: []
+            codes: '',
+            codeList: []
         });
         
         const batchUnbindValidation = reactive({
@@ -324,9 +323,9 @@ const app = createApp({
         
         // 批量解绑输入验证
         const validateBatchUnbindInput = () => {
-            // 解析邮箱列表
-            const emailLines = batchUnbindForm.emails.trim().split('\n').filter(line => line.trim().length > 0);
-            batchUnbindForm.emailList = emailLines.map(line => line.trim());
+            // 解析兑换码列表
+            const codeLines = batchUnbindForm.codes.trim().split('\n').filter(line => line.trim().length > 0);
+            batchUnbindForm.codeList = codeLines.map(line => line.trim());
             
             // 重置验证状态
             batchUnbindValidation.isValid = false;
@@ -334,44 +333,43 @@ const app = createApp({
             batchUnbindValidation.type = 'info';
             
             // 检查是否有输入
-            if (batchUnbindForm.emailList.length === 0) {
+            if (batchUnbindForm.codeList.length === 0) {
                 return;
             }
             
-            // 检查邮箱格式
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const invalidEmails = batchUnbindForm.emailList.filter(email => !emailRegex.test(email));
-            if (invalidEmails.length > 0) {
-                batchUnbindValidation.message = `发现 ${invalidEmails.length} 个无效邮箱格式：${invalidEmails.slice(0, 3).join(', ')}${invalidEmails.length > 3 ? '...' : ''}`;
+            // 检查兑换码是否为空
+            const emptyCodes = batchUnbindForm.codeList.filter(code => code.length === 0);
+            if (emptyCodes.length > 0) {
+                batchUnbindValidation.message = '发现空的兑换码，请检查输入';
                 batchUnbindValidation.type = 'error';
                 return;
             }
             
             // 检查重复
-            const uniqueEmails = new Set(batchUnbindForm.emailList);
-            if (uniqueEmails.size !== batchUnbindForm.emailList.length) {
-                batchUnbindValidation.message = `发现重复邮箱，请检查输入`;
+            const uniqueCodes = new Set(batchUnbindForm.codeList);
+            if (uniqueCodes.size !== batchUnbindForm.codeList.length) {
+                batchUnbindValidation.message = `发现重复兑换码，请检查输入`;
                 batchUnbindValidation.type = 'warning';
                 return;
             }
             
             // 验证通过
             batchUnbindValidation.isValid = true;
-            batchUnbindValidation.message = `准备查询 ${batchUnbindForm.emailList.length} 个邮箱的绑定状态`;
+            batchUnbindValidation.message = `准备查询 ${batchUnbindForm.codeList.length} 个兑换码的绑定状态`;
             batchUnbindValidation.type = 'success';
         };
         
-        // 批量查询绑定状态
-        const handleBatchCheckStatus = async () => {
+        // 批量查询绑定状态（通过兑换码）
+        const handleBatchCheckStatusByCode = async () => {
             if (!batchUnbindValidation.isValid) {
-                ElMessage.warning('请先检查邮箱输入格式');
+                ElMessage.warning('请先检查兑换码输入格式');
                 return;
             }
             
             loading.batchUnbindCheck = true;
             
             // 初始化进度和结果
-            const total = batchUnbindForm.emailList.length;
+            const total = batchUnbindForm.codeList.length;
             batchUnbindProgress.total = total;
             batchUnbindProgress.success = 0;
             batchUnbindProgress.failed = 0;
@@ -379,8 +377,8 @@ const app = createApp({
             batchUnbindProgress.percentage = 0;
             
             // 初始化结果列表
-            batchUnbindResults.value = batchUnbindForm.emailList.map(email => ({
-                email: email,
+            batchUnbindResults.value = batchUnbindForm.codeList.map(code => ({
+                code: code,
                 status: 'pending',
                 statusText: '等待查询',
                 message: '',
@@ -390,7 +388,7 @@ const app = createApp({
             
             // 逐个查询绑定状态
             for (let i = 0; i < total; i++) {
-                const email = batchUnbindForm.emailList[i];
+                const code = batchUnbindForm.codeList[i];
                 const result = batchUnbindResults.value[i];
                 
                 try {
@@ -398,8 +396,8 @@ const app = createApp({
                     result.status = 'processing';
                     result.statusText = '查询中...';
                     
-                    // 调用状态查询API
-                    const data = await window.userApi.getStatus(email);
+                    // 调用状态查询API（通过兑换码）
+                    const data = await window.userApi.getStatusByCode(code);
                     
                     if (data.success) {
                         if (data.has_binding && data.binding && data.binding.status === 'active') {
@@ -412,7 +410,7 @@ const app = createApp({
                         } else {
                             result.status = 'checked';
                             result.statusText = '无可解绑项';
-                            result.message = data.has_binding ? '绑定状态非活跃或已过期' : '未绑定任何兑换码';
+                            result.message = data.has_binding ? '绑定状态非活跃或已过期' : '未绑定任何用户';
                             batchUnbindProgress.success++;
                         }
                     } else {
@@ -492,14 +490,16 @@ const app = createApp({
                     item.status = 'processing';
                     item.statusText = '解绑中...';
                     
-                    // 调用解绑API
-                    const data = await window.userApi.unbind(item.email, item.binding.redemption_code);
+                    // 调用解绑API（使用绑定中的用户邮箱）
+                    const userEmail = item.binding.user_email || item.binding.masked_email || '';
+                    const data = await window.userApi.unbind(userEmail, item.binding.redemption_code);
                     
                     if (data.success) {
                         item.status = 'success';
                         item.statusText = '解绑成功';
                         item.message = `${item.binding.type === 'warranty' ? '质保型' : '一次性'}兑换码解绑成功`;
                         item.canUnbind = false;
+                        item.unbindResponse = data; // 保存解绑响应数据
                         batchUnbindProgress.success++;
                     } else {
                         item.status = 'failed';
@@ -547,8 +547,8 @@ const app = createApp({
             batchUnbindProgress.failed = 0;
             batchUnbindProgress.pending = 0;
             batchUnbindProgress.percentage = 0;
-            batchUnbindForm.emails = '';
-            batchUnbindForm.emailList = [];
+            batchUnbindForm.codes = '';
+            batchUnbindForm.codeList = [];
             batchUnbindValidation.isValid = false;
             batchUnbindValidation.message = '';
             batchUnbindValidation.type = 'info';
@@ -594,26 +594,50 @@ const app = createApp({
                 
                 successItems.forEach(item => {
                     const codeType = item.binding.type === 'warranty' ? '质保型' : '一次性';
-                    // 既然解绑成功了，说明：
-                    // 1. 质保型兑换码总是可重用
-                    // 2. 一次性兑换码能成功解绑，说明母号活跃，因此也可重用
-                    // 只有当API明确返回can_reuse=false时才显示不可重用
+                    
+                    // 获取解绑响应数据
+                    const unbindData = item.unbindResponse || {};
+                    const oldCode = unbindData.old_redemption_code || item.binding.redemption_code;
+                    const newCode = unbindData.new_redemption_code;
+                    const canReuse = unbindData.can_reuse;
+                    
+                    let codeDisplay = '';
                     let isReusable = true;
                     let reusableText = '✅ 可重新使用';
                     
-                    // 检查API是否明确返回了不可重用的标志
-                    if (item.binding.can_reuse === false) {
-                        isReusable = false;
-                        reusableText = '⚠️ 不可重用（母号异常）';
+                    if (codeType === '质保型') {
+                        // 质保型总是可重用，使用原兑换码
+                        codeDisplay = oldCode;
+                        reusableText = '✅ 可重新使用';
+                    } else if (codeType === '一次性') {
+                        if (canReuse !== false) {
+                            // 母号活跃，可重用
+                            if (newCode && newCode !== oldCode) {
+                                codeDisplay = `${newCode} <span style="color: #909399; font-size: 11px;">(新)</span>`;
+                            } else {
+                                codeDisplay = oldCode;
+                            }
+                            reusableText = '✅ 可重新使用';
+                        } else {
+                            // 母号问题，检查是否有新兑换码
+                            if (newCode && newCode !== oldCode) {
+                                codeDisplay = `${newCode} <span style="color: #67c23a; font-size: 11px;">(新生成)</span>`;
+                                reusableText = '✅ 新兑换码可用';
+                            } else {
+                                codeDisplay = `${oldCode} <span style="color: #ef4444; font-size: 11px;">(已作废)</span>`;
+                                isReusable = false;
+                                reusableText = '⚠️ 已作废，需新码';
+                            }
+                        }
                     }
                     
                     dialogContent += `
                         <div class="code-item success-item">
                             <div class="code-info">
-                                <div class="code-display">${item.binding.redemption_code}</div>
+                                <div class="code-display">${codeDisplay}</div>
                                 <div class="code-meta">
                                     <span class="code-type ${item.binding.type}">${codeType}</span>
-                                    <span class="email-info">${item.email}</span>
+                                    <span class="email-info">${item.code}</span>
                                 </div>
                             </div>
                             <div class="reuse-status">
@@ -677,8 +701,15 @@ const app = createApp({
                 </div>
             `;
             
-            // 存储成功的兑换码列表用于复制功能
-            window.batchUnbindSuccessCodes = successItems.map(item => item.binding.redemption_code);
+            // 存储成功的兑换码列表用于复制功能（优先使用新兑换码）
+            window.batchUnbindSuccessCodes = successItems.map(item => {
+                const unbindData = item.unbindResponse || {};
+                const oldCode = unbindData.old_redemption_code || item.binding.redemption_code;
+                const newCode = unbindData.new_redemption_code;
+                
+                // 优先返回新兑换码，如果没有则返回原兑换码
+                return newCode && newCode !== oldCode ? newCode : oldCode;
+            });
             
             // 显示弹窗
             ElMessageBox.alert(dialogContent, '批量解绑结果汇总', {
@@ -825,48 +856,67 @@ const app = createApp({
             });
         };
         
-        // 状态查询处理（用于解绑页面）
-        const handleCheckStatus = () => {
+        
+        // 解绑确认处理
+        const handleUnbindConfirm = () => {
             unbindFormRef.value.validate(async (valid) => {
                 if (valid) {
-                    loading.status = true;
-                    statusResult.value = null;
+                    loading.unbindConfirm = true;
+                    unbindConfirmation.value = null;
                     
                     try {
-                        const data = await window.userApi.getStatus(unbindForm.email);
+                        const data = await window.userApi.getUnbindConfirmation(unbindForm.code);
                         
                         if (data.success) {
-                            statusResult.value = data;
+                            unbindConfirmation.value = data;
                         } else {
-                            ElMessage.error(data.error || '查询失败');
+                            ElMessage.error(data.error || '获取确认信息失败');
                         }
                     } catch (error) {
-                        console.error('状态查询请求失败:', error);
+                        console.error('解绑确认请求失败:', error);
                         ElMessage.error(error.error || '请求失败，请重试');
                     } finally {
-                        loading.status = false;
+                        loading.unbindConfirm = false;
                     }
                 }
             });
         };
         
         
-        // 解绑处理
-        const handleUnbind = async () => {
-            if (!statusResult.value || !statusResult.value.binding) {
-                ElMessage.warning('没有可解绑的卡密');
+        // 邮箱脱敏处理
+        const maskEmail = (email) => {
+            if (!email || typeof email !== 'string') return email;
+            const atIndex = email.indexOf('@');
+            if (atIndex <= 0) return email;
+            
+            const username = email.substring(0, atIndex);
+            const domain = email.substring(atIndex);
+            
+            if (username.length <= 2) {
+                return username.charAt(0) + '*'.repeat(username.length - 1) + domain;
+            } else if (username.length <= 4) {
+                return username.charAt(0) + '*'.repeat(username.length - 2) + username.charAt(username.length - 1) + domain;
+            } else {
+                return username.substring(0, 2) + '**' + username.substring(username.length - 2) + domain;
+            }
+        };
+        
+        // 通过确认信息直接解绑
+        const handleConfirmedUnbind = async () => {
+            if (!unbindConfirmation.value || !unbindConfirmation.value.confirmation_info) {
+                ElMessage.warning('没有确认信息');
                 return;
             }
             
-            const binding = statusResult.value.binding;
-            const typeText = binding.type === 'warranty' 
+            const confirmInfo = unbindConfirmation.value.confirmation_info;
+            const typeText = confirmInfo.bind_type === 'warranty' 
                 ? '质保型（解绑后可重新使用）' 
                 : '一次性（母号活跃时可重新使用）';
             
             try {
                 await ElMessageBox.confirm(
-                    `确定要解绑兑换码 ${binding.redemption_code} 吗？\n类型：${typeText}`,
-                    '确认解绑',
+                    `确定要解绑兑换码 ${confirmInfo.redemption_code} 吗？\n类型：${typeText}\n用户：${confirmInfo.masked_email}`,
+                    '最终确认解绑',
                     {
                         confirmButtonText: '确定解绑',
                         cancelButtonText: '取消',
@@ -877,83 +927,15 @@ const app = createApp({
                 
                 loading.unbind = true;
                 
-                const data = await window.userApi.unbind(unbindForm.email, binding.redemption_code);
+                // 使用脱敏邮箱进行解绑（后端会处理）
+                // 注意：后端应该支持通过兑换码直接解绑，不需要邮箱
+                const data = await window.userApi.unbind('', confirmInfo.redemption_code);
                 
                 if (data.success) {
-                    // 根据类型显示不同的成功消息
-                    if (data.code_type === 'warranty') {
-                        ElMessageBox.alert(
-                            `<div style="line-height: 1.8;">
-                                <p><strong>✓ 质保卡密解绑成功！</strong></p>
-                                <p>兑换码: <strong>${data.redemption_code}</strong></p>
-                                <p style="color: #67c23a;">此兑换码已重置为未使用状态，可以直接重新使用。</p>
-                                <p>您可以：</p>
-                                <ul style="text-align: left; margin-left: 20px;">
-                                    <li>使用新邮箱重新绑定此兑换码</li>
-                                    <li>将此兑换码提供给其他用户</li>
-                                </ul>
-                            </div>`,
-                            '解绑成功',
-                            {
-                                dangerouslyUseHTMLString: true,
-                                confirmButtonText: '知道了',
-                                type: 'success'
-                            }
-                        );
-                    } else if (data.code_type === 'one-time') {
-                        if (data.can_reuse) {
-                            // 母号活跃，兑换码已重置
-                            ElMessageBox.alert(
-                                `<div style="line-height: 1.8;">
-                                    <p><strong>✓ 一次性卡密解绑成功！</strong></p>
-                                    <p>兑换码: <strong>${data.redemption_code}</strong></p>
-                                    <p style="color: #67c23a;">此兑换码已重置为未使用状态，可以重新使用。</p>
-                                    <p style="color: #409eff;">原母号: ${data.original_mother || '将由原母号邀请'}</p>
-                                    <p>您可以：</p>
-                                    <ul style="text-align: left; margin-left: 20px;">
-                                        <li>使用新邮箱重新绑定此兑换码</li>
-                                        <li>将此兑换码提供给其他用户</li>
-                                        <li style="color: #909399;">注：重新使用时仍由原母号邀请</li>
-                                    </ul>
-                                </div>`,
-                                '解绑成功',
-                                {
-                                    dangerouslyUseHTMLString: true,
-                                    confirmButtonText: '知道了',
-                                    type: 'success'
-                                }
-                            );
-                        } else {
-                            // 母号已封禁或其他原因，兑换码不可重用
-                            ElMessageBox.alert(
-                                `<div style="line-height: 1.8;">
-                                    <p><strong>✓ 一次性卡密解绑成功！</strong></p>
-                                    <p>原兑换码: <strong>${data.redemption_code}</strong> (已作废)</p>
-                                    <p style="color: #e6a23c;">注意：原兑换码不可重用，需要新的兑换码才能重新加入。</p>
-                                    <p>下一步：</p>
-                                    <ul style="text-align: left; margin-left: 20px;">
-                                        <li>请联系管理员获取新的兑换码</li>
-                                        <li>或到管理后台生成新的兑换码</li>
-                                    </ul>
-                                </div>`,
-                                '解绑成功',
-                                {
-                                    dangerouslyUseHTMLString: true,
-                                    confirmButtonText: '知道了',
-                                    type: 'warning'
-                                }
-                            );
-                        }
-                    } else {
-                        ElMessage.success(data.message || '解绑成功');
-                    }
+                    handleUnbindSuccess(data, confirmInfo.redemption_code, confirmInfo.bind_type);
                     
-                    // 清空状态结果
-                    statusResult.value = null;
-                    // 2秒后重新查询状态
-                    setTimeout(() => {
-                        handleCheckStatus();
-                    }, 2000);
+                    // 清空确认信息
+                    unbindConfirmation.value = null;
                 } else {
                     ElMessage.error(data.error || '解绑失败');
                 }
@@ -966,6 +948,116 @@ const app = createApp({
                 loading.unbind = false;
             }
         };
+        
+        // 解绑成功处理逻辑
+        const handleUnbindSuccess = (data, redemptionCode, codeType) => {
+            // 根据类型和新响应字段显示不同的成功消息
+            if (data.code_type === 'warranty' || codeType === 'warranty') {
+                const codeToShow = data.old_redemption_code || redemptionCode;
+                ElMessageBox.alert(
+                    `<div style="line-height: 1.8;">
+                        <p><strong>✓ 质保卡密解绑成功！</strong></p>
+                        <p>兑换码: <strong>${codeToShow}</strong></p>
+                        <p style="color: #67c23a;">此兑换码已重置为未使用状态，可以直接重新使用。</p>
+                        <p>您可以：</p>
+                        <ul style="text-align: left; margin-left: 20px;">
+                            <li>使用新邮箱重新绑定此兑换码</li>
+                            <li>将此兑换码提供给其他用户</li>
+                        </ul>
+                    </div>`,
+                    '解绑成功',
+                    {
+                        dangerouslyUseHTMLString: true,
+                        confirmButtonText: '知道了',
+                        type: 'success'
+                    }
+                );
+            } else if (data.code_type === 'one-time' || codeType === 'onetime') {
+                const oldCode = data.old_redemption_code || redemptionCode;
+                
+                if (data.can_reuse !== false) {
+                    // 母号活跃，兑换码可重用
+                    let codeInfo = '';
+                    if (data.new_redemption_code && data.new_redemption_code !== oldCode) {
+                        codeInfo = `<p>新兑换码: <strong>${data.new_redemption_code}</strong></p>
+                                   <p style="color: #909399;">原兑换码: <del>${oldCode}</del> (已更换)</p>`;
+                    } else {
+                        codeInfo = `<p>兑换码: <strong>${oldCode}</strong></p>`;
+                    }
+                    
+                    ElMessageBox.alert(
+                        `<div style="line-height: 1.8;">
+                            <p><strong>✓ 一次性卡密解绑成功！</strong></p>
+                            ${codeInfo}
+                            <p style="color: #67c23a;">兑换码已重置为未使用状态，可以重新使用。</p>
+                            <p>您可以：</p>
+                            <ul style="text-align: left; margin-left: 20px;">
+                                <li>使用新邮箱重新绑定此兑换码</li>
+                                <li>将此兑换码提供给其他用户</li>
+                                <li style="color: #909399;">注：重新使用时仍由原母号邀请</li>
+                            </ul>
+                        </div>`,
+                        '解绑成功',
+                        {
+                            dangerouslyUseHTMLString: true,
+                            confirmButtonText: '知道了',
+                            type: 'success'
+                        }
+                    );
+                } else {
+                    // 母号问题导致不可重用，检查是否生成了新兑换码
+                    if (data.new_redemption_code && data.new_redemption_code !== oldCode) {
+                        // 已生成新兑换码
+                        ElMessageBox.alert(
+                            `<div style="line-height: 1.8;">
+                                <p><strong>✓ 一次性卡密解绑成功！</strong></p>
+                                <p>新兑换码: <strong style="color: #67c23a;">${data.new_redemption_code}</strong></p>
+                                <p style="color: #909399;">原兑换码: <del>${oldCode}</del> (已作废)</p>
+                                <p style="color: #67c23a;">系统已为您生成新的兑换码，可以直接使用。</p>
+                                <p>您可以：</p>
+                                <ul style="text-align: left; margin-left: 20px;">
+                                    <li>使用新邮箱重新绑定新兑换码</li>
+                                    <li>将新兑换码提供给其他用户</li>
+                                    <li style="color: #909399;">注：新兑换码仍由原母号邀请</li>
+                                </ul>
+                                <div style="margin-top: 16px; padding: 12px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px;">
+                                    <strong style="color: #0369a1;">💡 提示：</strong> 请保存好新兑换码，避免丢失
+                                </div>
+                            </div>`,
+                            '解绑成功',
+                            {
+                                dangerouslyUseHTMLString: true,
+                                confirmButtonText: '知道了',
+                                type: 'success'
+                            }
+                        );
+                    } else {
+                        // 没有生成新兑换码，需要联系管理员
+                        ElMessageBox.alert(
+                            `<div style="line-height: 1.8;">
+                                <p><strong>✓ 一次性卡密解绑成功！</strong></p>
+                                <p>原兑换码: <strong>${oldCode}</strong> (已作废)</p>
+                                <p style="color: #e6a23c;">注意：原兑换码不可重用，需要新的兑换码才能重新加入。</p>
+                                <p>下一步：</p>
+                                <ul style="text-align: left; margin-left: 20px;">
+                                    <li>请联系管理员获取新的兑换码</li>
+                                    <li>或到管理后台生成新的兑换码</li>
+                                </ul>
+                            </div>`,
+                            '解绑成功',
+                            {
+                                dangerouslyUseHTMLString: true,
+                                confirmButtonText: '知道了',
+                                type: 'warning'
+                            }
+                        );
+                    }
+                }
+            } else {
+                ElMessage.success(data.message || '解绑成功');
+            }
+        };
+        
         
         // 返回响应式数据和方法
         return {
@@ -994,9 +1086,10 @@ const app = createApp({
             unbindForm,
             unbindFormRef,
             unbindRules,
-            statusResult,
-            handleCheckStatus,
-            handleUnbind,
+            unbindConfirmation,
+            handleUnbindConfirm,
+            handleConfirmedUnbind,
+            maskEmail,
             
             // 批量解绑相关
             batchUnbindForm,
@@ -1004,7 +1097,7 @@ const app = createApp({
             batchUnbindProgress,
             batchUnbindResults,
             validateBatchUnbindInput,
-            handleBatchCheckStatus,
+            handleBatchCheckStatusByCode,
             handleBatchUnbind,
             clearBatchUnbindResults,
             getUnbindResultTagType,

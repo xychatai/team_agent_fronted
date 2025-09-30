@@ -427,95 +427,105 @@
                                 <el-tabs v-model="unbindMode" type="card" class="unbind-tabs">
                                     <el-tab-pane label="单个解绑" name="single">
                                         <el-form :model="unbindForm" :rules="unbindRules" ref="unbindFormRef" size="large">
-                                            <el-form-item prop="email">
+                                            <el-form-item prop="code">
                                                 <el-input 
-                                                    v-model="unbindForm.email" 
-                                                    placeholder="请输入您的邮箱地址"
+                                                    v-model="unbindForm.code" 
+                                                    placeholder="请输入您的兑换码"
                                                     class="input-field"
                                                     clearable>
                                                     <template #prefix>
-                                                        <el-icon><User /></el-icon>
+                                                        <el-icon><Ticket /></el-icon>
                                                     </template>
                                                 </el-input>
                                             </el-form-item>
                                             <el-form-item>
                                                 <el-button 
-                                                    type="primary" 
+                                                    type="warning" 
                                                     size="large"
                                                     class="action-button"
-                                                    @click="handleCheckStatus"
-                                                    :loading="loading.status">
-                                                    <el-icon v-if="!loading.status"><View /></el-icon>
-                                                    查询绑定状态
+                                                    @click="handleUnbindConfirm"
+                                                    :loading="loading.unbindConfirm">
+                                                    <el-icon v-if="!loading.unbindConfirm"><InfoFilled /></el-icon>
+                                                    获取解绑确认信息
                                                 </el-button>
                                             </el-form-item>
                                         </el-form>
                                         
-                                        <div v-if="statusResult" class="status-panel">
-                                            <div class="binding-info">
+                                        <!-- 解绑确认信息面板 -->
+                                        <div v-if="unbindConfirmation && unbindConfirmation.success" class="confirmation-panel">
+                                            <div class="confirmation-header">
+                                                <div class="confirmation-icon">
+                                                    <el-icon size="48" color="#e6a23c"><WarningFilled /></el-icon>
+                                                </div>
+                                                <div class="confirmation-title">解绑确认信息</div>
+                                            </div>
+                                            <div class="confirmation-content">
                                                 <el-descriptions :column="1" border size="large">
-                                                    <el-descriptions-item label="绑定状态">
-                                                        <el-tag :type="statusResult.has_binding ? 'success' : 'info'" size="large">
-                                                            <span v-text="statusResult.has_binding ? '已绑定' : '未绑定'"></span>
+                                                    <el-descriptions-item label="用户邮箱">
+                                                        <code class="masked-email">{{ unbindConfirmation.confirmation_info.masked_email }}</code>
+                                                    </el-descriptions-item>
+                                                    <el-descriptions-item label="兑换码">
+                                                        <code class="code-display">{{ unbindConfirmation.confirmation_info.redemption_code }}</code>
+                                                    </el-descriptions-item>
+                                                    <el-descriptions-item label="母号邮箱">
+                                                        <span>{{ unbindConfirmation.confirmation_info.mother_email }}</span>
+                                                    </el-descriptions-item>
+                                                    <el-descriptions-item label="绑定类型">
+                                                        <el-tag :type="unbindConfirmation.confirmation_info.bind_type === 'warranty' ? 'warning' : 'info'" size="large">
+                                                            {{ unbindConfirmation.confirmation_info.bind_type === 'warranty' ? '质保型' : '一次性' }}
                                                         </el-tag>
                                                     </el-descriptions-item>
-                                                    <el-descriptions-item v-if="statusResult.binding" label="兑换码">
-                                                        <code class="code-display" v-text="statusResult.binding.redemption_code"></code>
-                                                    </el-descriptions-item>
-                                                    <el-descriptions-item v-if="statusResult.binding" label="母号邮箱">
-                                                        <span v-text="statusResult.binding.mother_email"></span>
-                                                    </el-descriptions-item>
-                                                    <el-descriptions-item v-if="statusResult.binding" label="绑定类型">
-                                                        <el-tag :type="statusResult.binding.type === 'warranty' ? 'warning' : 'info'" size="large">
-                                                            <span v-text="statusResult.binding.type === 'warranty' ? '质保型' : '一次性'"></span>
-                                                        </el-tag>
-                                                    </el-descriptions-item>
-                                                    <el-descriptions-item v-if="statusResult.binding && statusResult.binding.remaining_days !== undefined" label="剩余质保天数">
-                                                        <span v-text="statusResult.binding.remaining_days"></span>天
+                                                    <el-descriptions-item label="绑定时间">
+                                                        <span>{{ unbindConfirmation.confirmation_info.created_at }}</span>
                                                     </el-descriptions-item>
                                                 </el-descriptions>
                                                 
-                                                <div v-if="statusResult.binding && statusResult.binding.status === 'active'" class="unbind-actions">
+                                                <div class="confirmation-warning">
+                                                    <el-alert 
+                                                        type="warning" 
+                                                        :closable="false"
+                                                        show-icon>
+                                                        <template #default>
+                                                            <strong>确认您要解绑以上绑定吗？</strong><br>
+                                                            解绑后，用户 <code>{{ unbindConfirmation.confirmation_info.masked_email }}</code> 将退出团队。
+                                                        </template>
+                                                    </el-alert>
+                                                </div>
+                                                
+                                                <div class="confirmation-actions">
                                                     <el-button 
                                                         type="danger" 
                                                         size="large"
-                                                        class="unbind-button"
-                                                        @click="handleUnbind"
+                                                        class="confirm-unbind-button"
+                                                        @click="handleConfirmedUnbind"
                                                         :loading="loading.unbind">
                                                         <el-icon v-if="!loading.unbind"><Minus /></el-icon>
-                                                        解绑此兑换码
+                                                        确认解绑
                                                     </el-button>
-                                                    <div class="unbind-tips">
-                                                        <el-alert 
-                                                            :type="statusResult.binding.type === 'warranty' ? 'success' : 'warning'" 
-                                                            :closable="false"
-                                                            show-icon>
-                                                            <template v-if="statusResult.binding.type === 'warranty'">
-                                                                ✅ 质保型卡密解绑后可以重新使用
-                                                            </template>
-                                                            <template v-else>
-                                                                ⚠️ 一次性卡密在母号活跃时可解绑并重新使用，母号封禁时无法解绑
-                                                            </template>
-                                                        </el-alert>
-                                                    </div>
+                                                    <el-button 
+                                                        size="large"
+                                                        @click="unbindConfirmation = null">
+                                                        取消
+                                                    </el-button>
                                                 </div>
                                             </div>
                                         </div>
+                                        
                                     </el-tab-pane>
                                     
                                     <el-tab-pane label="批量解绑" name="batch">
                                         <div class="batch-unbind-section">
                                             <div class="input-group">
                                                 <div class="input-label">
-                                                    <el-icon><User /></el-icon>
-                                                    <span>邮箱列表（每行一个）</span>
-                                                    <span class="count-badge" v-if="batchUnbindForm.emailList.length > 0">{{ batchUnbindForm.emailList.length }}</span>
+                                                    <el-icon><Ticket /></el-icon>
+                                                    <span>兑换码列表（每行一个）</span>
+                                                    <span class="count-badge" v-if="batchUnbindForm.codeList.length > 0">{{ batchUnbindForm.codeList.length }}</span>
                                                 </div>
                                                 <el-input
-                                                    v-model="batchUnbindForm.emails"
+                                                    v-model="batchUnbindForm.codes"
                                                     type="textarea"
                                                     :rows="6"
-                                                    placeholder="请输入要解绑的邮箱地址，每行一个&#10;例如：&#10;user1@example.com&#10;user2@example.com&#10;user3@example.com"
+                                                    placeholder="请输入要解绑的兑换码，每行一个&#10;例如：&#10;CODE123456&#10;CODE789012&#10;CODE345678"
                                                     class="batch-textarea"
                                                     @input="validateBatchUnbindInput">
                                                 </el-input>
@@ -535,7 +545,7 @@
                                                     type="warning" 
                                                     size="large"
                                                     class="action-button"
-                                                    @click="handleBatchCheckStatus"
+                                                    @click="handleBatchCheckStatusByCode"
                                                     :disabled="!batchUnbindValidation.isValid || loading.batchUnbindCheck"
                                                     :loading="loading.batchUnbindCheck">
                                                     <el-icon v-if="!loading.batchUnbindCheck"><View /></el-icon>
@@ -582,8 +592,8 @@
                                                     <div v-for="(result, index) in batchUnbindResults" :key="index" class="result-item unbind-result-item">
                                                         <div class="result-info">
                                                             <span class="result-index">{{ index + 1 }}.</span>
-                                                            <span class="result-email">{{ result.email }}</span>
-                                                            <span v-if="result.binding" class="result-code">{{ result.binding.redemption_code }}</span>
+                                                            <span class="result-code">{{ result.code }}</span>
+                                                            <span v-if="result.binding && result.binding.user_email" class="result-email">{{ maskEmail(result.binding.user_email) }}</span>
                                                         </div>
                                                         <div class="result-status">
                                                             <el-tag 

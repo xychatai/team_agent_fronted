@@ -173,12 +173,30 @@ class UserApi {
     }
 
     /**
-     * 查询用户状态
+     * 查询用户状态（通过邮箱）
      * @param {string} email - 用户邮箱
      * @returns {Promise} 状态信息
      */
     async getStatus(email) {
         return this.client.post('user.status', { email });
+    }
+
+    /**
+     * 查询用户状态（通过兑换码）
+     * @param {string} code - 兑换码
+     * @returns {Promise} 状态信息
+     */
+    async getStatusByCode(code) {
+        return this.client.post('user.status', { code });
+    }
+
+    /**
+     * 获取解绑确认信息
+     * @param {string} code - 兑换码
+     * @returns {Promise} 解绑确认信息
+     */
+    async getUnbindConfirmation(code) {
+        return this.client.post('user.unbind_confirm', { code });
     }
 
     /**
