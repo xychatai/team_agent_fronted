@@ -207,7 +207,20 @@ const app = createApp({
             const uniqueCodes = new Set(batchForm.codeList);
             
             if (uniqueEmails.size !== batchForm.emailList.length) {
-                batchValidation.message = `发现重复邮箱，请检查输入`;
+                // 找出重复的邮箱
+                const duplicateEmails = [];
+                const emailCountMap = new Map();
+                
+                batchForm.emailList.forEach(email => {
+                    const count = emailCountMap.get(email) || 0;
+                    emailCountMap.set(email, count + 1);
+                    if (count >= 1) {
+                        duplicateEmails.push(email);
+                    }
+                });
+                
+                const uniqueDuplicates = [...new Set(duplicateEmails)];
+                batchValidation.message = `发现重复邮箱：${uniqueDuplicates.join(', ')}`;
                 batchValidation.type = 'warning';
                 return;
             }
@@ -845,14 +858,67 @@ const app = createApp({
                 if (valid) {
                     loading.redeem = true;
                     redeemResult.value = null;
-                    
+
                     try {
-                        const data = await window.userApi.redeem(redeemForm.code, redeemForm.email);
-                        redeemResult.value = data;
-                        
+                        // 第一阶段：检查是否需要替换确认
+                        const data = await window.userApi.redeem(redeemForm.code, redeemForm.email, false);
+
                         if (data.success) {
+                            redeemResult.value = data;
                             ElMessage.success('兑换成功！请检查邮箱');
+                        } else if (data.needs_confirmation) {
+                            // 需要用户确认替换
+                            const existingBinding = data.existing_binding;
+                            const bindTypeText = existingBinding.bind_type === 'warranty' ? '质保型' : '一次性';
+                            const codeHint = existingBinding.redemption_code_hint || '****';
+
+                            try {
+                                await ElMessageBox.confirm(
+                                    `<div style="line-height: 1.8;">
+                                        <p><strong>⚠️ 该邮箱已绑定其他兑换码</strong></p>
+                                        <p>绑定信息：</p>
+                                        <ul style="text-align: left; margin-left: 20px;">
+                                            <li>母号：${existingBinding.mother_email}</li>
+                                            <li>类型：${bindTypeText}</li>
+                                            <li>兑换码：${codeHint}</li>
+                                            <li>绑定时间：${existingBinding.created_at || '未知'}</li>
+                                        </ul>
+                                        <p style="color: #e6a23c; margin-top: 12px;">如果您的兑换码已遗失，确认后将：</p>
+                                        <ul style="text-align: left; margin-left: 20px;">
+                                            <li>自动作废旧兑换码</li>
+                                            <li>解除旧兑换码的绑定</li>
+                                            <li>绑定新的兑换码</li>
+                                        </ul>
+                                        <p style="color: #f56c6c; margin-top: 12px;"><strong>此操作不可撤销！</strong></p>
+                                    </div>`,
+                                    '确认替换兑换码',
+                                    {
+                                        confirmButtonText: '确认替换',
+                                        cancelButtonText: '取消',
+                                        type: 'warning',
+                                        dangerouslyUseHTMLString: true
+                                    }
+                                );
+
+                                // 第二阶段：用户确认后执行替换
+                                const confirmData = await window.userApi.redeem(redeemForm.code, redeemForm.email, true);
+                                redeemResult.value = confirmData;
+
+                                if (confirmData.success) {
+                                    ElMessage.success('兑换成功！已替换旧兑换码，请检查邮箱');
+                                } else {
+                                    ElMessage.error(confirmData.error || '兑换失败');
+                                }
+                            } catch (error) {
+                                if (error === 'cancel') {
+                                    ElMessage.info('已取消兑换操作');
+                                    redeemResult.value = null;
+                                } else {
+                                    throw error;
+                                }
+                            }
                         } else {
+                            redeemResult.value = data;
                             ElMessage.error(data.error || '兑换失败');
                         }
                     } catch (error) {

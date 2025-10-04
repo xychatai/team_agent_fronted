@@ -166,10 +166,15 @@ class UserApi {
      * 兑换码兑换
      * @param {string} code - 兑换码
      * @param {string} email - 用户邮箱
+     * @param {boolean} confirmReplace - 是否确认替换已有绑定
      * @returns {Promise} 兑换结果
      */
-    async redeem(code, email) {
-        return this.client.post('user.redeem', { code, email });
+    async redeem(code, email, confirmReplace = false) {
+        return this.client.post('user.redeem', {
+            code,
+            email,
+            confirm_replace: confirmReplace
+        });
     }
 
     /**
